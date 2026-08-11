@@ -1,0 +1,284 @@
+/* Selection-rectangle example — light and dark, no framework. */
+
+:root {
+    /* One family across the page — same as prdx-site (Latin and Cyrillic native). */
+    --main-font: "Onest", "Inter", sans-serif;
+    --mono-font: ui-monospace, SFMono-Regular, Menlo, monospace;
+
+    /* Onest has no italic — allow a synthetic slant, never a synthetic weight. */
+    font-synthesis: style;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+
+    --bg: #fbfbfd;
+    --surface: #ffffff;
+    --ink: #18181b;
+    --muted: #71717a;
+    --faint: #a1a1aa;
+    --line: #e4e4e7;
+    --line-firm: #d4d4d8;
+    --accent: #4f46e5;
+    --accent-in: #ffffff;
+    --grid: #e4e4e7;
+    --shadow:
+        0 1px 2px rgb(24 24 27 / 0.05), 0 8px 24px -12px rgb(24 24 27 / 0.18);
+    --radius: 10px;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg: #0b0b0f;
+        --surface: #141419;
+        --ink: #f4f4f5;
+        --muted: #a1a1aa;
+        --faint: #71717a;
+        --line: #26262c;
+        --line-firm: #35353d;
+        --accent: #818cf8;
+        --accent-in: #14141a;
+        --grid: #232329;
+        --shadow:
+            0 1px 2px rgb(0 0 0 / 0.4), 0 12px 32px -14px rgb(0 0 0 / 0.7);
+    }
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: clamp(1.5rem, 5vw, 3.5rem) 1.25rem 4rem;
+    background: var(--bg);
+    color: var(--ink);
+    font: 400 15px/1.6 var(--main-font);
+}
+
+main {
+    max-width: 44rem;
+    margin: 0 auto;
+    display: grid;
+    gap: 1.5rem;
+}
+
+/* ── header ──────────────────────────────────────────────────────────────── */
+
+header {
+    display: grid;
+    gap: 0.4rem;
+}
+
+.eyebrow {
+    margin: 0;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--accent);
+}
+
+h1 {
+    margin: 0;
+    font-size: clamp(1.5rem, 4vw, 1.9rem);
+    font-weight: 620;
+    letter-spacing: -0.021em;
+}
+
+.lede {
+    margin: 0;
+    max-width: 38rem;
+    color: var(--muted);
+    text-wrap: pretty;
+}
+
+/* ── phase chips: the machine's Q, with the current one lit ───────────────── */
+
+.phases {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.phases li {
+    padding: 0.22rem 0.6rem;
+    border: 1px solid var(--line-firm);
+    border-radius: 999px;
+    font: 500 0.8rem/1.5 var(--mono-font);
+    color: var(--faint);
+    transition:
+        color 0.12s,
+        background-color 0.12s,
+        border-color 0.12s;
+}
+
+body[data-phase="empty"] .phases li[data-for="empty"],
+body[data-phase="ready"] .phases li[data-for="ready"],
+body[data-phase="drawing"] .phases li[data-for="drawing"],
+body[data-phase="moving"] .phases li[data-for="moving"],
+body[data-phase="resizing"] .phases li[data-for="resizing"] {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-in);
+}
+
+/* ── drawing surface ─────────────────────────────────────────────────────── */
+
+#area {
+    position: relative;
+    height: clamp(260px, 45vh, 380px);
+    border: 1px solid var(--line-firm);
+    border-radius: var(--radius);
+    background:
+        radial-gradient(circle at 1px 1px, var(--grid) 1px, transparent 0) 0 0 /
+            16px 16px,
+        var(--surface);
+    box-shadow: var(--shadow);
+    cursor: crosshair;
+    touch-action: none;
+    overflow: hidden;
+    user-select: none;
+}
+
+#box {
+    position: absolute;
+    display: none;
+    border: 1.5px solid var(--accent);
+    border-radius: 2px;
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    pointer-events: none;
+}
+
+/*
+ * The eight handles, drawn where `handleAt` actually looks for them — one square
+ * background layer per anchor point. Hidden while a fresh rectangle is being
+ * dragged out: there is nothing to grab yet.
+ */
+#box::after {
+    content: "";
+    position: absolute;
+    inset: -3.5px;
+    background-image:
+        linear-gradient(var(--accent), var(--accent)),
+        linear-gradient(var(--accent), var(--accent)),
+        linear-gradient(var(--accent), var(--accent)),
+        linear-gradient(var(--accent), var(--accent)),
+        linear-gradient(var(--accent), var(--accent)),
+        linear-gradient(var(--accent), var(--accent)),
+        linear-gradient(var(--accent), var(--accent)),
+        linear-gradient(var(--accent), var(--accent));
+    background-size: 7px 7px;
+    background-repeat: no-repeat;
+    background-position:
+        left top,
+        center top,
+        right top,
+        left center,
+        right center,
+        left bottom,
+        center bottom,
+        right bottom;
+    opacity: 0;
+    transition: opacity 0.12s;
+}
+
+body[data-phase="ready"] #box::after,
+body[data-phase="moving"] #box::after,
+body[data-phase="resizing"] #box::after {
+    opacity: 1;
+}
+
+/* ── readout ─────────────────────────────────────────────────────────────── */
+
+.readout {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+    gap: 0.75rem;
+}
+
+.stat {
+    display: grid;
+    gap: 0.15rem;
+    padding: 0.6rem 0.8rem;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--surface);
+}
+
+.stat .label {
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--faint);
+}
+
+.stat .value {
+    font: 500 0.92rem/1.5 var(--mono-font);
+    font-variant-numeric: tabular-nums;
+}
+
+.stat.keys {
+    grid-column: span 2;
+}
+.stat.keys .value {
+    color: var(--muted);
+    font-weight: 400;
+}
+
+kbd {
+    display: inline-block;
+    padding: 0 0.32em;
+    border: 1px solid var(--line-firm);
+    border-bottom-width: 2px;
+    border-radius: 4px;
+    background: var(--bg);
+    color: var(--ink);
+    font: inherit;
+    font-size: 0.85em;
+}
+
+/* ── transition log ──────────────────────────────────────────────────────── */
+
+.trace {
+    display: grid;
+    gap: 0.5rem;
+}
+
+.trace h2 {
+    margin: 0;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--faint);
+}
+
+#log {
+    margin: 0;
+    padding: 0.8rem 1rem;
+    min-height: 7.5rem;
+    max-height: 14rem;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--muted);
+    font: 400 12.5px/1.75 var(--mono-font);
+    white-space: pre;
+    overflow: auto;
+    overscroll-behavior: contain;
+}
+
+#log:empty::before {
+    content: "waiting for the first transition…";
+    color: var(--faint);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    * {
+        transition: none !important;
+    }
+}

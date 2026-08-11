@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>fsmjs — selection rectangle</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Onest:wght@200..900&display=swap"
+            rel="stylesheet"
+        />
+        <link rel="stylesheet" href="./src/style.css" />
+    </head>
+    <body data-phase="empty">
+        <main>
+            <header>
+                <p class="eyebrow">@evgkch/fsmjs example</p>
+                <h1>Selection rectangle</h1>
+                <p class="lede">
+                    Drag to draw. Grab the middle to move it, a corner or an
+                    edge to resize. Every pointer event goes straight to the
+                    machine — no handler here tests the phase.
+                </p>
+            </header>
+
+            <ol class="phases" aria-label="Machine phases">
+                <li data-for="empty">empty</li>
+                <li data-for="ready">ready</li>
+                <li data-for="drawing">drawing</li>
+                <li data-for="moving">moving</li>
+                <li data-for="resizing">resizing</li>
+            </ol>
+
+            <div id="area">
+                <div id="box"></div>
+            </div>
+
+            <div class="readout">
+                <div class="stat">
+                    <span class="label">Rectangle</span>
+                    <span class="value" id="rect">—</span>
+                </div>
+                <div class="stat">
+                    <span class="label">Undo stack</span>
+                    <span class="value" id="undo">0</span>
+                </div>
+                <div class="stat keys">
+                    <span class="label">Keys</span>
+                    <span class="value"
+                        ><kbd>Esc</kbd> cancel · <kbd>⌘/Ctrl</kbd>+<kbd>Z</kbd>
+                        undo drag</span
+                    >
+                </div>
+            </div>
+
+            <section class="trace">
+                <h2>Transitions</h2>
+                <pre id="log" aria-live="polite"></pre>
+            </section>
+        </main>
+
+        <script type="module" src="./src/main.ts"></script>
+    </body>
+</html>

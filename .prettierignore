@@ -1,0 +1,8 @@
+# Build output — formatted by the tool that wrote it, not by us.
+dist/
+
+# Prose is laid out by hand: tables, wrapping and the width of a rule line all carry
+# meaning here, and Prettier would reflow them.
+*.md
+
+package-lock.json

@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>fsmjs — examples</title>
+        <meta
+            name="description"
+            content="Live examples for @evgkch/fsmjs — a small, typed Mealy state machine for TypeScript."
+        />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Onest:wght@200..900&display=swap"
+            rel="stylesheet"
+        />
+        <link rel="stylesheet" href="./style.css" />
+    </head>
+    <body>
+        <main>
+            <header>
+                <p class="eyebrow">@evgkch/fsmjs</p>
+                <h1>Examples</h1>
+                <p class="lede">
+                    Each example is a small app built on the library: one table
+                    of rules, a context that belongs to the state rather than to
+                    the machine. Open the demo, then read the walkthrough — it
+                    goes through the same code line by line.
+                </p>
+                <p class="links">
+                    <a href="https://github.com/evgkch/fsmjs">Repository</a>
+                    <a href="https://www.npmjs.com/package/@evgkch/fsmjs"
+                        >npm</a
+                    >
+                    <span
+                        ><a href="https://github.com/evgkch/fsmjs#readme"
+                            >Guide</a
+                        >
+                        <a
+                            class="alt"
+                            href="https://github.com/evgkch/fsmjs/blob/master/README.ru.md"
+                            hreflang="ru"
+                            >[ru]</a
+                        ></span
+                    >
+                </p>
+            </header>
+
+            <ul class="cards">
+                <li class="card">
+                    <a
+                        class="thumb"
+                        href="./selection-rect/"
+                        aria-hidden="true"
+                        tabindex="-1"
+                    >
+                        <span class="rect"></span>
+                    </a>
+                    <div class="body">
+                        <h2>
+                            <a href="./selection-rect/">Selection rectangle</a>
+                        </h2>
+                        <p class="about">
+                            Drag to draw a rectangle, then move or resize it.
+                            Five phases, eight handles, undo. Plain HTML and
+                            TypeScript, no framework — every pointer event goes
+                            straight to the machine, and no handler tests the
+                            phase.
+                        </p>
+                        <p class="tags">
+                            <span>pointer events</span><span>undo</span
+                            ><span>state-dependent context</span>
+                        </p>
+                        <p class="links">
+                            <a href="./selection-rect/">Open demo</a>
+                            <a
+                                href="https://github.com/evgkch/fsmjs-examples/tree/master/selection-rect"
+                                >Source</a
+                            >
+                            <span
+                                ><a
+                                    href="https://github.com/evgkch/fsmjs-examples/blob/master/selection-rect/README.md"
+                                    >Walkthrough</a
+                                >
+                                <a
+                                    class="alt"
+                                    href="https://github.com/evgkch/fsmjs-examples/blob/master/selection-rect/README.ru.md"
+                                    hreflang="ru"
+                                    >[ru]</a
+                                ></span
+                            >
+                        </p>
+                    </div>
+                </li>
+            </ul>
+
+            <footer>
+                <p>
+                    Published from
+                    <a
+                        href="https://github.com/evgkch/fsmjs/tree/master/examples"
+                        >examples/</a
+                    >
+                    on every push to <code>master</code>. MIT.
+                </p>
+            </footer>
+        </main>
+    </body>
+</html>
