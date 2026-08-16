@@ -8,7 +8,7 @@
  * is held by the schema, not by a chain of `if`s in the view.
  */
 import type { FsmState } from "@evgkch/fsmjs";
-import { log, rules } from "@evgkch/fsmjs/debug";
+import { history, log, rules } from "@evgkch/fsmjs/debug";
 import { handleAt, norm } from "./geometry.js";
 import { inside, sel } from "./machine.js";
 import type { Point, Rect, Sel, Spot } from "./types.js";
@@ -104,38 +104,59 @@ const DRAG = ["drawing", "moving", "resizing"];
  * `empty`, and going back to it as `ready` left the page showing a 0×0 selection the
  * machine did not believe in.
  */
-type Undone = { at: FsmState<Sel>; log: Line[] };
+type Undone = { at: number; log: Line[] };
 const undo: Undone[] = [];
+
+/**
+ * Every state the machine has been in, recorded by the library.
+ *
+ * The undo below is per *drag* and this is per transition, so they are not two histories: this one
+ * holds the states, and the stack holds which of them a drag began at. Going back by hand and
+ * going back from a debugger then move the same machine through the same record, rather than two
+ * things disagreeing about where it has been.
+ *
+ * It is the library's own recorder and nothing is wrapped around it: `history(sel)` subscribes,
+ * and the machine it watches does not learn that it is being watched.
+ */
+const past = history(sel);
 
 log(
   sel,
   rules((line, t) => {
+    // `history` subscribed first, so its index already points at the state this transition
+    // reached; the state the drag began at is the one before it.
     if (DRAG.includes(t.target.type) && !DRAG.includes(t.source.type))
-      undo.push({ at: t.source, log: entries.map((e) => ({ ...e })) });
+      undo.push({ at: past.index - 1, log: entries.map((e) => ({ ...e })) });
     render(t.target);
     trace(line);
   }),
 );
 
 /**
- * Going back uses `restore`, which is not a transition: nothing is dispatched, no output
- * event fires, no `Transition` is published. That is what keeps undo off its own stack —
- * and it also means none of the code that normally paints the page runs, so undo restores
- * the view by hand, the log strip included.
+ * Wherever the machine is put back, the page draws where it now is.
+ *
+ * It is subscribed to the *recorder*, not to the machine, and that is the whole of it: `restore`
+ * dispatches nothing, so no output event fires and no `Transition` is published, which is what
+ * keeps undo off its own stack. The one thing that does say so is the recorder, and it says it
+ * whoever asked — so anything else that walks this run is not a case this page has to know about.
  */
+past.rx.on("moved", () => {
+  const at = sel.state;
+  // What the `draw`/`clear` output events would have done, had this been a transition.
+  if (at.type === "empty") box.style.display = "none";
+  else paint(norm(at.context.rect));
+  area.style.cursor = "crosshair";
+  render(at);
+});
+
+/** Back one whole drag: the log strip as it read then, and the record put back to where it began. */
 function undoDrag() {
   const back = undo.pop();
   if (!back) return;
 
-  sel.restore(back.at);
-  // What the `draw`/`clear` output events would have done, had this been a transition.
-  if (back.at.type === "empty") box.style.display = "none";
-  else paint(norm(back.at.context.rect));
-  area.style.cursor = "crosshair";
-
   entries.splice(0, entries.length, ...back.log);
   paintLog();
-  render(back.at);
+  past.jump(back.at);
 }
 
 // ── readout ──────────────────────────────────────────────────────────────────

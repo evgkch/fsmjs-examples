@@ -1,47 +1,28 @@
+@import "./tokens.css";
+
 /* Examples index — light and dark, same palette as the examples themselves. */
 
+/*
+ * The palette, the type, the spacings and the corners are the set's, out of `tokens.css` beside
+ * this file. Two examples a shade apart read as two projects, and a reader moving between them
+ * should be looking at the subject rather than at the furniture.
+ *
+ * What stays here is what that file has no opinion about, because it belongs to this page and to
+ * nothing else: the graph paper behind the drawing area, and the lift the panels sit on.
+ */
 :root {
-    --main-font: "Onest", "Inter", sans-serif;
-    --mono-font: ui-monospace, SFMono-Regular, Menlo, monospace;
-
-    /* Onest has no italic — allow a synthetic slant, never a synthetic weight. */
-    font-synthesis: style;
-    text-rendering: optimizeLegibility;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-
-    --bg: #fbfbfd;
-    --surface: #ffffff;
-    --ink: #18181b;
-    --muted: #71717a;
-    --faint: #a1a1aa;
-    --line: #e4e4e7;
-    --line-firm: #d4d4d8;
-    --accent: #4f46e5;
-    --grid: #e4e4e7;
+    --grid: color-mix(in oklab, var(--line) 70%, transparent);
+    --accent-in: var(--surface);
     --shadow:
-        0 1px 2px rgb(24 24 27 / 0.05), 0 8px 24px -12px rgb(24 24 27 / 0.18);
-    --radius: 10px;
+        0 1px 2px oklch(22% 0.012 264 / 0.05),
+        0 8px 24px -12px oklch(22% 0.012 264 / 0.18);
 }
 
 @media (prefers-color-scheme: dark) {
     :root {
-        --bg: #0b0b0f;
-        --surface: #141419;
-        --ink: #f4f4f5;
-        --muted: #a1a1aa;
-        --faint: #71717a;
-        --line: #26262c;
-        --line-firm: #35353d;
-        --accent: #818cf8;
-        --grid: #232329;
         --shadow:
-            0 1px 2px rgb(0 0 0 / 0.4), 0 12px 32px -14px rgb(0 0 0 / 0.7);
+            0 1px 2px oklch(0% 0 0 / 0.4), 0 12px 32px -14px oklch(0% 0 0 / 0.7);
     }
-}
-
-* {
-    box-sizing: border-box;
 }
 
 body {
@@ -198,10 +179,11 @@ h2 a:hover {
  */
 .thumb {
     position: relative;
-    display: block;
+    display: grid;
+    place-items: center;
     min-height: 8rem;
     border: 1px solid var(--line-firm);
-    border-radius: 8px;
+    border-radius: var(--radius-sm);
     background:
         radial-gradient(circle at 1px 1px, var(--grid) 1px, transparent 0) 0 0 /
             12px 12px,
@@ -215,6 +197,30 @@ h2 a:hover {
     border: 1.5px solid var(--accent);
     border-radius: 2px;
     background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+/* The second thumbnail: three nodes and the way back, which is the shape of a review. */
+.graph {
+    width: 78%;
+    color: var(--faint);
+}
+
+.graph rect {
+    fill: color-mix(in srgb, var(--accent) 12%, transparent);
+    stroke: var(--accent);
+    stroke-width: 1.5;
+}
+
+.graph path {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+}
+
+/* The arrowhead is the one path that is a shape rather than a line. */
+.graph marker path {
+    fill: currentColor;
+    stroke: none;
 }
 
 .rect::after {

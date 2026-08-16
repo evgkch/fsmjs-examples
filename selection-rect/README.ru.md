@@ -207,7 +207,7 @@ type Sel = Merge<
 Условия записываются в правила по именам функций; их реализации приведены в п. 4.2.
 
 > [!NOTE]
-> Ниже — набросок, а не схема, которую примет компилятор, и `satisfies` у него нет намеренно. Контекст привязан к состоянию (п. 3): условия читают его, а войти в состояние, которое что-то хранит, без `with` нельзя. Одно требует другого, поэтому целиком схема сходится только в п. 5.3, когда появляются операции. Здесь показано лишь то, где в правиле стоят имена условий.
+> Ниже — набросок, а не схема, которую примет компилятор, и `satisfies` у него нет намеренно. Контекст привязан к состоянию (п. 3): условия читают его, а войти в состояние, которое что-то хранит, без функции контекста нельзя. Одно требует другого, поэтому целиком схема сходится только в п. 5.3, когда появляются операции. Здесь показано лишь то, где в правиле стоят имена условий.
 
 ```ts
 const guarded = {
@@ -430,7 +430,7 @@ function slideInto(r: Rect, a: Size): Rect {
 
 ### 5.2. Выходные события
 
-Событие `draw` содержит прямоугольник, поэтому поле `by` для него обязательно (README, «Схема переходов»). Событие `clear` не содержит данных, и `by` в этом случае запрещён.
+Событие `draw` содержит прямоугольник, поэтому его `emit` — пара: имя и функция данных (README, «Схема переходов»). Событие `clear` не содержит данных, и его `emit` — простое имя.
 
 Данные для `draw` строит функция `shot` из листинга п. 5.1. Это единственная функция примера, которая читает контекст уже после перехода.
 
@@ -441,32 +441,32 @@ import { StateMachine } from "@evgkch/fsmjs";
 
 const sel = new StateMachine<Sel, Σ, Λ>(
   {
-    empty: { down: [{ to: "drawing", with: begin }] },
+    empty: { down: [{ to: ["drawing", begin] }] },
     ready: {
       down: [
-        { to: "resizing", when: onHandle, with: grabHandle },
-        { to: "moving", when: inside, with: grab },
-        { to: "drawing", with: begin },
+        { to: ["resizing", grabHandle], when: onHandle },
+        { to: ["moving", grab], when: inside },
+        { to: ["drawing", begin] },
       ],
       cancel: [{ to: "empty", emit: "clear" }],
     },
     drawing: {
-      move: [{ to: "drawing", with: stretch, emit: "draw", by: shot }],
+      move: [{ to: ["drawing", stretch], emit: ["draw", shot] }],
       up: [
         { to: "empty", when: tiny, emit: "clear" },
-        { to: "ready", with: settle, emit: "draw", by: shot },
+        { to: ["ready", settle], emit: ["draw", shot] },
       ],
       cancel: [{ to: "empty", emit: "clear" }],
     },
     moving: {
-      move: [{ to: "moving", with: translate, emit: "draw", by: shot }],
-      up: [{ to: "ready", with: settle, emit: "draw", by: shot }],
-      cancel: [{ to: "ready", with: revert, emit: "draw", by: shot }],
+      move: [{ to: ["moving", translate], emit: ["draw", shot] }],
+      up: [{ to: ["ready", settle], emit: ["draw", shot] }],
+      cancel: [{ to: ["ready", revert], emit: ["draw", shot] }],
     },
     resizing: {
-      move: [{ to: "resizing", with: resize, emit: "draw", by: shot }],
-      up: [{ to: "ready", with: settle, emit: "draw", by: shot }],
-      cancel: [{ to: "ready", with: revert, emit: "draw", by: shot }],
+      move: [{ to: ["resizing", resize], emit: ["draw", shot] }],
+      up: [{ to: ["ready", settle], emit: ["draw", shot] }],
+      cancel: [{ to: ["ready", revert], emit: ["draw", shot] }],
     },
   },
   { type: "empty", context: undefined },

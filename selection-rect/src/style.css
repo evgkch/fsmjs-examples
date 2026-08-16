@@ -1,50 +1,28 @@
+@import "../../tokens.css";
+
 /* Selection-rectangle example — light and dark, no framework. */
 
+/*
+ * The palette, the type, the spacings and the corners are the set's, out of `tokens.css` beside
+ * this file. Two examples a shade apart read as two projects, and a reader moving between them
+ * should be looking at the subject rather than at the furniture.
+ *
+ * What stays here is what that file has no opinion about, because it belongs to this page and to
+ * nothing else: the graph paper behind the drawing area, and the lift the panels sit on.
+ */
 :root {
-    /* One family across the page — same as prdx-site (Latin and Cyrillic native). */
-    --main-font: "Onest", "Inter", sans-serif;
-    --mono-font: ui-monospace, SFMono-Regular, Menlo, monospace;
-
-    /* Onest has no italic — allow a synthetic slant, never a synthetic weight. */
-    font-synthesis: style;
-    text-rendering: optimizeLegibility;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-
-    --bg: #fbfbfd;
-    --surface: #ffffff;
-    --ink: #18181b;
-    --muted: #71717a;
-    --faint: #a1a1aa;
-    --line: #e4e4e7;
-    --line-firm: #d4d4d8;
-    --accent: #4f46e5;
-    --accent-in: #ffffff;
-    --grid: #e4e4e7;
+    --grid: color-mix(in oklab, var(--line) 70%, transparent);
+    --accent-in: var(--surface);
     --shadow:
-        0 1px 2px rgb(24 24 27 / 0.05), 0 8px 24px -12px rgb(24 24 27 / 0.18);
-    --radius: 10px;
+        0 1px 2px oklch(22% 0.012 264 / 0.05),
+        0 8px 24px -12px oklch(22% 0.012 264 / 0.18);
 }
 
 @media (prefers-color-scheme: dark) {
     :root {
-        --bg: #0b0b0f;
-        --surface: #141419;
-        --ink: #f4f4f5;
-        --muted: #a1a1aa;
-        --faint: #71717a;
-        --line: #26262c;
-        --line-firm: #35353d;
-        --accent: #818cf8;
-        --accent-in: #14141a;
-        --grid: #232329;
         --shadow:
-            0 1px 2px rgb(0 0 0 / 0.4), 0 12px 32px -14px rgb(0 0 0 / 0.7);
+            0 1px 2px oklch(0% 0 0 / 0.4), 0 12px 32px -14px oklch(0% 0 0 / 0.7);
     }
-}
-
-* {
-    box-sizing: border-box;
 }
 
 body {
@@ -204,7 +182,7 @@ body[data-phase="resizing"] #box::after {
     gap: 0.15rem;
     padding: 0.6rem 0.8rem;
     border: 1px solid var(--line);
-    border-radius: 8px;
+    border-radius: var(--radius-sm);
     background: var(--surface);
 }
 
@@ -234,7 +212,7 @@ kbd {
     padding: 0 0.32em;
     border: 1px solid var(--line-firm);
     border-bottom-width: 2px;
-    border-radius: 4px;
+    border-radius: var(--step-1);
     background: var(--bg);
     color: var(--ink);
     font: inherit;
@@ -263,7 +241,7 @@ kbd {
     min-height: 7.5rem;
     max-height: 14rem;
     border: 1px solid var(--line);
-    border-radius: 8px;
+    border-radius: var(--radius-sm);
     background: var(--surface);
     color: var(--muted);
     font: 400 12.5px/1.75 var(--mono-font);

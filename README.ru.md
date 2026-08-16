@@ -6,9 +6,10 @@
 
 **Сайт: [evgkch.github.io/fsmjs](https://evgkch.github.io/fsmjs/)**
 
-| Пример                                 | Демонстрация                                                      | Разбор                                                                  |
-| -------------------------------------- | ----------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| [`selection-rect`](selection-rect)     | [открыть](https://evgkch.github.io/fsmjs/selection-rect/)         | [English](selection-rect/README.md) · [Русский](selection-rect/README.ru.md) |
+| Пример                                   | Демонстрация                                               | Разбор                                                                            |
+| ---------------------------------------- | ---------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| [`selection-rect`](selection-rect)       | [открыть](https://evgkch.github.io/fsmjs/selection-rect/)  | [English](selection-rect/README.md) · [Русский](selection-rect/README.ru.md)       |
+| [`review`](review)                       | [открыть](https://evgkch.github.io/fsmjs/review/)          | [English](review/README.md) · [Русский](review/README.ru.md)                       |
 
 ## Запуск
 

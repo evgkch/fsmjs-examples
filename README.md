@@ -6,9 +6,10 @@ Examples for [`@evgkch/fsmjs`](https://github.com/evgkch/fsmjs), a small typed M
 
 **Live: [evgkch.github.io/fsmjs](https://evgkch.github.io/fsmjs/)**
 
-| Example                                | Demo                                                              | Walkthrough                                                             |
-| -------------------------------------- | ----------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| [`selection-rect`](selection-rect)     | [open](https://evgkch.github.io/fsmjs/selection-rect/)            | [English](selection-rect/README.md) · [Русский](selection-rect/README.ru.md) |
+| Example                                  | Demo                                                       | Walkthrough                                                                       |
+| ---------------------------------------- | ---------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| [`selection-rect`](selection-rect)       | [open](https://evgkch.github.io/fsmjs/selection-rect/)     | [English](selection-rect/README.md) · [Русский](selection-rect/README.ru.md)       |
+| [`review`](review)                       | [open](https://evgkch.github.io/fsmjs/review/)             | [English](review/README.md) · [Русский](review/README.ru.md)                       |
 
 ## Running locally
 

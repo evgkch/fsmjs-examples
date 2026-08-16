@@ -39,32 +39,32 @@ import type {
 
 export const sel = new StateMachine<Sel, Σ, Λ>(
   {
-    empty: { down: [{ to: "drawing", with: begin }] },
+    empty: { down: [{ to: ["drawing", begin] }] },
     ready: {
       down: [
-        { to: "resizing", when: onHandle, with: grabHandle },
-        { to: "moving", when: inside, with: grab },
-        { to: "drawing", with: begin },
+        { when: onHandle, to: ["resizing", grabHandle] },
+        { when: inside, to: ["moving", grab] },
+        { to: ["drawing", begin] },
       ],
       cancel: [{ to: "empty", emit: "clear" }],
     },
     drawing: {
-      move: [{ to: "drawing", with: stretch, emit: "draw", by: shot }],
+      move: [{ to: ["drawing", stretch], emit: ["draw", shot] }],
       up: [
         { to: "empty", when: tiny, emit: "clear" },
-        { to: "ready", with: settle, emit: "draw", by: shot },
+        { to: ["ready", settle], emit: ["draw", shot] },
       ],
       cancel: [{ to: "empty", emit: "clear" }],
     },
     moving: {
-      move: [{ to: "moving", with: translate, emit: "draw", by: shot }],
-      up: [{ to: "ready", with: settle, emit: "draw", by: shot }],
-      cancel: [{ to: "ready", with: revert, emit: "draw", by: shot }],
+      move: [{ to: ["moving", translate], emit: ["draw", shot] }],
+      up: [{ to: ["ready", settle], emit: ["draw", shot] }],
+      cancel: [{ to: ["ready", revert], emit: ["draw", shot] }],
     },
     resizing: {
-      move: [{ to: "resizing", with: resize, emit: "draw", by: shot }],
-      up: [{ to: "ready", with: settle, emit: "draw", by: shot }],
-      cancel: [{ to: "ready", with: revert, emit: "draw", by: shot }],
+      move: [{ to: ["resizing", resize], emit: ["draw", shot] }],
+      up: [{ to: ["ready", settle], emit: ["draw", shot] }],
+      cancel: [{ to: ["ready", revert], emit: ["draw", shot] }],
     },
   },
   { type: "empty", context: undefined },

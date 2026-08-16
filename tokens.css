@@ -1,0 +1,109 @@
+/*
+ * The vocabulary every example is drawn in — the palette, the type, the spacing and the corners.
+ *
+ * One file, imported by each example's own stylesheet, because the examples are a set: two demos a
+ * shade apart read as two projects, and a reader moving between them should be looking at the
+ * subject and not at the furniture.
+ *
+ * Three laws, and every value below is an instance of one of them.
+ *
+ *   colour    one ladder of lightness at one hue, read from the other end in the dark
+ *   space     every distance is the module halved or doubled
+ *   shape     two radii and no others, cut as a superellipse
+ *
+ * The palette is greyscale on purpose. What these pages are about is a machine, and colour is
+ * spent on saying something about one — a phase that is current, a finding that blocks. A page
+ * that tints its own furniture has nothing left to say it with.
+ */
+
+:root {
+    --main-font: "Onest", "Inter", sans-serif;
+    --mono-font: ui-monospace, SFMono-Regular, Menlo, monospace;
+
+    /* Onest has no italic — allow a synthetic slant, never a synthetic weight. */
+    font-synthesis: style;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+
+    /*
+     * Space: 3 6 12 18 24 36, the module halved and doubled. Between them lie 1:2, 2:3 and 3:4 —
+     * what that buys is not the ratios but that no two distances here are four pixels apart, so
+     * every grouping a reader can see is one that was meant.
+     */
+    --step-1: 3px;
+    --step-2: 6px;
+    --step-3: 12px;
+    --step-4: 18px;
+    --step-5: 24px;
+    --step-6: 36px;
+
+    /* One duration and one curve. A page where two things answer the pointer at two speeds is
+       two pages. */
+    --quick: 0.12s;
+
+    /*
+     * The page is a shade under the surfaces on it, and that is the whole of the layering — a
+     * border and a value step, with no shadow doing the same job a third time. One ladder of
+     * lightness at one hue; the dark scheme is the same ladder read from the other end.
+     */
+    --bg: oklch(96.5% 0.004 264);
+    --surface: oklch(100% 0 0);
+    --ink: oklch(22% 0.012 264);
+    --muted: oklch(52% 0.014 264);
+    --faint: oklch(68% 0.012 264);
+    --line: oklch(91% 0.006 264);
+    --line-firm: oklch(85.5% 0.008 264);
+
+    /* What the page marks with, and it is ink with a cool cast rather than a colour: whatever a
+       demo colours to mean something about the machine has the wheel to itself. */
+    --accent: oklch(38% 0.035 264);
+
+    /* The two things that are not the subject and still have to be seen: something wrong, and
+       something worth mentioning. Kept in the warm quadrant, well away from the greys. */
+    --warn: oklch(54% 0.19 25);
+    --emit: oklch(56% 0.14 75);
+
+    /*
+     * Two radii and no others: one for the surfaces a panel is made of, one for the things inside
+     * them, at 3:2 like everything else. They are generous because the corner is a superellipse
+     * and not an arc — the curve leaves the edge later and cuts in harder, so a small radius
+     * spends the whole shape and shows none of it.
+     */
+    --radius: 18px;
+    --radius-sm: 12px;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg: oklch(13.5% 0.012 264);
+        --surface: oklch(18.5% 0.012 264);
+        --ink: oklch(96% 0.006 264);
+        --muted: oklch(70% 0.012 264);
+        --faint: oklch(54% 0.012 264);
+        --line: oklch(27% 0.012 264);
+        --line-firm: oklch(33% 0.014 264);
+
+        --accent: oklch(90% 0.02 264);
+        --warn: oklch(74% 0.16 28);
+        --emit: oklch(82% 0.13 75);
+    }
+}
+
+* {
+    box-sizing: border-box;
+}
+
+/* Chrome 139+: every corner on the page. The property does nothing where the radius is 0, so one
+   rule covers everything that has a frame — and the pages that predate it lose nothing. */
+@supports (corner-shape: superellipse(1.25)) {
+    * {
+        corner-shape: superellipse(1.25);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    * {
+        transition: none !important;
+    }
+}

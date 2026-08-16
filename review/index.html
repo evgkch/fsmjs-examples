@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>fsmjs — schema review</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Onest:wght@200..900&display=swap"
+            rel="stylesheet"
+        />
+        <link rel="stylesheet" href="./src/style.css" />
+    </head>
+    <body data-phase="draft">
+        <main>
+            <header>
+                <p class="eyebrow">@evgkch/fsmjs example</p>
+                <h1>Schema review</h1>
+                <p class="lede">
+                    A change goes through the pipeline every platform team ends
+                    up with: an automated gate, then two sign-offs, then it
+                    ships. The gate is the library's own
+                    <code>validate</code> and <code>analyze</code>, run over the
+                    schema in the box. Every button is enabled by asking the
+                    machine <code>can()</code> — nothing here tests the phase.
+                </p>
+            </header>
+
+            <ol class="phases" aria-label="Pipeline phases">
+                <li data-for="draft">draft</li>
+                <li data-for="checking">checking</li>
+                <li data-for="blocked">blocked</li>
+                <li data-for="review">review</li>
+                <li data-for="changes">changes</li>
+                <li data-for="approved">approved</li>
+                <li data-for="shipped">shipped</li>
+            </ol>
+
+            <div class="work">
+                <section class="paper">
+                    <h2 class="label">The submission</h2>
+                    <textarea
+                        id="doc"
+                        spellcheck="false"
+                        autocapitalize="off"
+                        autocomplete="off"
+                        aria-label="The schema under review"
+                    ></textarea>
+                    <p class="hint">
+                        Break it and submit again. Delete a comma; add a state
+                        no rule leads to; put a second rule behind an unguarded
+                        one. Those block. Upper-case a state name and the gate
+                        lets it through with a caution for the reviewers.
+                    </p>
+                </section>
+
+                <section class="panel">
+                    <div class="stat">
+                        <span class="label">Phase</span>
+                        <span class="value" id="phase">draft</span>
+                    </div>
+                    <div class="stat">
+                        <span class="label">Round</span>
+                        <span class="value" id="size">—</span>
+                    </div>
+                    <div class="stat">
+                        <span class="label">Sign-offs</span>
+                        <span class="value" id="signs">—</span>
+                    </div>
+
+                    <ul class="faults" id="faults" aria-live="polite"></ul>
+
+                    <!-- What has been raised and answered. It stays for the life of the
+                         submission: answered is not the same as never asked. -->
+                    <div class="settled" id="settled" hidden>
+                        <h2 class="label">Settled</h2>
+                        <ul id="closed"></ul>
+                    </div>
+
+                    <div class="acts">
+                        <button id="submit">Submit</button>
+                        <button id="sign-dana">Sign · dana</button>
+                        <button id="sign-ravi">Sign · ravi</button>
+                        <button id="ship">Ship</button>
+                        <button id="withdraw">Withdraw</button>
+                    </div>
+
+                    <div class="ask">
+                        <input
+                            id="why"
+                            type="text"
+                            placeholder="what needs changing"
+                            aria-label="Reason for requesting changes"
+                        />
+                        <button id="reject">Request changes</button>
+                    </div>
+                </section>
+            </div>
+
+            <section class="trace">
+                <h2>Activity</h2>
+                <ol id="feed" aria-live="polite"></ol>
+            </section>
+        </main>
+
+        <script type="module" src="./src/main.ts"></script>
+    </body>
+</html>

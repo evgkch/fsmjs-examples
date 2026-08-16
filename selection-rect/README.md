@@ -207,7 +207,7 @@ This choice has a consequence: a state and its context only make sense together,
 Guards are written in the rules by function names; their implementations are given in section 4.2.
 
 > [!NOTE]
-> Below is a sketch, not a schema that the compiler would accept, and there is no `satisfies` intentionally. Context is tied to the state (section 3): guards read it, and entering a state that stores something without `with` is not allowed. One requires the other, so the full schema only converges in section 5.3 when operations appear. Here we only show where the guard names stand in the rules.
+> Below is a sketch, not a schema that the compiler would accept, and there is no `satisfies` intentionally. Context is tied to the state (section 3): guards read it, and entering a state that stores something without a context function is not allowed. One requires the other, so the full schema only converges in section 5.3 when operations appear. Here we only show where the guard names stand in the rules.
 
 ```ts
 const guarded = {
@@ -430,7 +430,7 @@ Each function returns a new object, never mutating the passed one (README, “Li
 
 ### 5.2. Output events
 
-The `draw` event carries the rectangle, so the `by` field is required for it (README, “Transition schema”). The `clear` event carries no payload, so `by` is forbidden.
+The `draw` event carries the rectangle, so its `emit` is a pair — the name and a packer (README, “Transition schema”). The `clear` event carries no payload, so its `emit` is a bare name.
 
 The data for `draw` is built by `shot` from the listing in section 5.1. It is the one function in the example that reads the context *after* the transition.
 
@@ -441,32 +441,32 @@ import { StateMachine } from "@evgkch/fsmjs";
 
 const sel = new StateMachine<Sel, Σ, Λ>(
   {
-    empty: { down: [{ to: "drawing", with: begin }] },
+    empty: { down: [{ to: ["drawing", begin] }] },
     ready: {
       down: [
-        { to: "resizing", when: onHandle, with: grabHandle },
-        { to: "moving", when: inside, with: grab },
-        { to: "drawing", with: begin },
+        { to: ["resizing", grabHandle], when: onHandle },
+        { to: ["moving", grab], when: inside },
+        { to: ["drawing", begin] },
       ],
       cancel: [{ to: "empty", emit: "clear" }],
     },
     drawing: {
-      move: [{ to: "drawing", with: stretch, emit: "draw", by: shot }],
+      move: [{ to: ["drawing", stretch], emit: ["draw", shot] }],
       up: [
         { to: "empty", when: tiny, emit: "clear" },
-        { to: "ready", with: settle, emit: "draw", by: shot },
+        { to: ["ready", settle], emit: ["draw", shot] },
       ],
       cancel: [{ to: "empty", emit: "clear" }],
     },
     moving: {
-      move: [{ to: "moving", with: translate, emit: "draw", by: shot }],
-      up: [{ to: "ready", with: settle, emit: "draw", by: shot }],
-      cancel: [{ to: "ready", with: revert, emit: "draw", by: shot }],
+      move: [{ to: ["moving", translate], emit: ["draw", shot] }],
+      up: [{ to: ["ready", settle], emit: ["draw", shot] }],
+      cancel: [{ to: ["ready", revert], emit: ["draw", shot] }],
     },
     resizing: {
-      move: [{ to: "resizing", with: resize, emit: "draw", by: shot }],
-      up: [{ to: "ready", with: settle, emit: "draw", by: shot }],
-      cancel: [{ to: "ready", with: revert, emit: "draw", by: shot }],
+      move: [{ to: ["resizing", resize], emit: ["draw", shot] }],
+      up: [{ to: ["ready", settle], emit: ["draw", shot] }],
+      cancel: [{ to: ["ready", revert], emit: ["draw", shot] }],
     },
   },
   { type: "empty", context: undefined },

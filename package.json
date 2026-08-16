@@ -10,10 +10,11 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "typecheck:only": "tsc --noEmit"
   },
   "dependencies": {
-    "@evgkch/fsmjs": "^0.1.1"
+    "@evgkch/fsmjs": "file:.."
   },
   "devDependencies": {
     "prettier": "^3.9.6",

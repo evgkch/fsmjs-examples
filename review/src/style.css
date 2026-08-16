@@ -1,0 +1,388 @@
+@import "../../tokens.css";
+
+/* Schema-review example — light and dark, no framework. */
+
+/*
+ * What the shared vocabulary has no opinion about, because it belongs to this page and to nothing
+ * else: the lift the panels sit on, and the ink a phase chip takes when it is the current one.
+ */
+:root {
+    --accent-in: var(--surface);
+    --shadow:
+        0 1px 2px oklch(22% 0.012 264 / 0.05),
+        0 8px 24px -12px oklch(22% 0.012 264 / 0.18);
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --shadow:
+            0 1px 2px oklch(0% 0 0 / 0.4), 0 12px 32px -14px oklch(0% 0 0 / 0.7);
+    }
+}
+
+body {
+    margin: 0;
+    padding: clamp(1.5rem, 5vw, 3.5rem) 1.25rem 4rem;
+    background: var(--bg);
+    color: var(--ink);
+    font: 400 15px/1.6 var(--main-font);
+}
+
+main {
+    max-width: 52rem;
+    margin: 0 auto;
+    display: grid;
+    gap: 1.5rem;
+}
+
+/* ── header ──────────────────────────────────────────────────────────────── */
+
+header {
+    display: grid;
+    gap: 0.4rem;
+}
+
+.eyebrow {
+    margin: 0;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--accent);
+}
+
+h1 {
+    margin: 0;
+    font-size: clamp(1.5rem, 4vw, 1.9rem);
+    font-weight: 620;
+    letter-spacing: -0.021em;
+}
+
+.lede {
+    margin: 0;
+    max-width: 40rem;
+    color: var(--muted);
+    text-wrap: pretty;
+}
+
+code {
+    font: 500 0.9em/1 var(--mono-font);
+    color: var(--ink);
+}
+
+/* ── phase chips: the machine's Q, with the current one lit ───────────────── */
+
+.phases {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.phases li {
+    padding: 0.22rem 0.6rem;
+    border: 1px solid var(--line-firm);
+    border-radius: 999px;
+    corner-shape: round;
+    font: 500 0.8rem/1.5 var(--mono-font);
+    color: var(--faint);
+    transition:
+        color var(--quick),
+        background-color var(--quick),
+        border-color var(--quick);
+}
+
+body[data-phase="draft"] .phases li[data-for="draft"],
+body[data-phase="checking"] .phases li[data-for="checking"],
+body[data-phase="blocked"] .phases li[data-for="blocked"],
+body[data-phase="review"] .phases li[data-for="review"],
+body[data-phase="changes"] .phases li[data-for="changes"],
+body[data-phase="approved"] .phases li[data-for="approved"],
+body[data-phase="shipped"] .phases li[data-for="shipped"] {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-in);
+}
+
+/* The one phase that is a fault rather than a step, and it says so in the one warm colour. */
+body[data-phase="blocked"] .phases li[data-for="blocked"] {
+    background: var(--warn);
+    border-color: var(--warn);
+    color: var(--surface);
+}
+
+/* ── the work: the document, and the pipeline beside it ──────────────────── */
+
+.work {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    gap: var(--step-4);
+    align-items: start;
+}
+
+@media (max-width: 46rem) {
+    .work {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+.paper,
+.panel {
+    display: grid;
+    gap: var(--step-3);
+    padding: var(--step-4);
+    border: 1px solid var(--line-firm);
+    border-radius: var(--radius);
+    background: var(--surface);
+    box-shadow: var(--shadow);
+}
+
+h2.label,
+.stat .label {
+    margin: 0;
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--faint);
+}
+
+textarea {
+    display: block;
+    width: 100%;
+    min-height: 15rem;
+    padding: var(--step-3);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+    color: var(--ink);
+    font: 400 13px/1.55 var(--mono-font);
+    tab-size: 2;
+    resize: vertical;
+    white-space: pre;
+    overflow-wrap: normal;
+}
+
+textarea:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+/* While the gate has it, the document is not editable — and that is a fact about the schema, not
+   about this rule: there is no `write` in `checking`. This only says so. */
+body[data-phase="checking"] textarea,
+body[data-phase="shipped"] textarea {
+    opacity: 0.62;
+}
+
+.hint {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.85rem;
+    text-wrap: pretty;
+}
+
+/* ── the panel's readout ─────────────────────────────────────────────────── */
+
+.stat {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--step-3);
+}
+
+.stat .value {
+    font: 500 0.92rem/1.5 var(--mono-font);
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+}
+
+/* ── what the gate found ─────────────────────────────────────────────────── */
+
+.faults {
+    display: grid;
+    gap: var(--step-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.faults:empty {
+    display: none;
+}
+
+.faults li {
+    display: grid;
+    gap: 0.1rem;
+    padding: var(--step-2) var(--step-3);
+    border-left: 2px solid var(--line-firm);
+    border-radius: var(--step-1);
+    background: var(--bg);
+}
+
+/* Two ranks, two colours, and the difference between them is whether it stops the pipeline. */
+.faults .blocker {
+    border-left-color: var(--warn);
+}
+
+.faults .caution {
+    border-left-color: var(--emit);
+}
+
+.faults .where {
+    font: 500 0.75rem/1.4 var(--mono-font);
+    color: var(--faint);
+}
+
+.faults .what {
+    font-size: 0.88rem;
+    color: var(--ink);
+    text-wrap: pretty;
+}
+
+/* ── what has been settled ───────────────────────────────────────────────── */
+
+/*
+ * Answered, and still on the record.
+ *
+ * It is drawn as the open items are drawn and quieter — the same two lines, the same rail down the
+ * left, at the presence of something that is there and is not the subject. Not struck through: a
+ * closed item is not a mistake, it is a question that was asked and got an answer, and the reason
+ * to keep it is that the answer only makes sense beside it.
+ */
+.settled {
+    display: grid;
+    gap: var(--step-2);
+}
+
+.settled[hidden] {
+    display: none;
+}
+
+.settled ul {
+    display: grid;
+    gap: var(--step-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.settled li {
+    display: grid;
+    gap: 0.1rem;
+    padding: var(--step-2) var(--step-3);
+    border-left: 2px solid var(--line-firm);
+    border-radius: var(--step-1);
+    background: var(--bg);
+    opacity: 0.618;
+}
+
+.settled .where {
+    font: 500 0.75rem/1.4 var(--mono-font);
+    color: var(--faint);
+}
+
+.settled .what {
+    font-size: 0.88rem;
+    color: var(--ink);
+    text-wrap: pretty;
+}
+
+/* ── the controls ────────────────────────────────────────────────────────── */
+
+.acts,
+.ask {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--step-2);
+}
+
+.ask {
+    flex-wrap: nowrap;
+}
+
+button {
+    padding: 0 var(--step-3);
+    height: var(--step-5);
+    border: 1px solid var(--line-firm);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--ink);
+    font: 500 0.82rem/1 var(--main-font);
+    cursor: pointer;
+    transition:
+        border-color var(--quick),
+        background-color var(--quick),
+        color var(--quick);
+}
+
+button:hover:not(:disabled) {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+/*
+ * Off, because the machine says so.
+ *
+ * Every one of these is disabled by `can()` and nothing else, so what is grey here is exactly what
+ * the schema has no rule for from where the machine stands. It is worth leaving them on the page
+ * rather than hiding them: the row of controls *is* the alphabet, and watching it light up as the
+ * document moves is the shortest description of what a partial transition function means.
+ */
+button:disabled {
+    opacity: 0.38;
+    cursor: not-allowed;
+}
+
+input[type="text"] {
+    flex: 1 1 auto;
+    min-width: 0;
+    height: var(--step-5);
+    padding: 0 var(--step-3);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+    color: var(--ink);
+    font: 400 0.85rem/1 var(--main-font);
+}
+
+input[type="text"]:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+/* ── the activity feed ───────────────────────────────────────────────────── */
+
+.trace {
+    display: grid;
+    gap: 0.5rem;
+}
+
+.trace h2 {
+    margin: 0;
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--faint);
+}
+
+/* Newest first, and every line of it came out of the machine as an output event — the page keeps
+   no log of its own, because a second record of what happened is a second thing to be wrong. */
+#feed {
+    display: grid;
+    gap: var(--step-1);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    max-height: 11rem;
+    overflow-y: auto;
+    font: 400 0.82rem/1.6 var(--mono-font);
+    color: var(--muted);
+}
+
+#feed li:first-child {
+    color: var(--ink);
+}
