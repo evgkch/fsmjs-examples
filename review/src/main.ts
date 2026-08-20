@@ -1,34 +1,39 @@
 /**
  * The page: a queue of one submission, and the buttons that move it.
  *
- * Two things are worth watching for while reading this file, because both are the point.
+ * Three things are worth watching for while reading this file, because all three are the point.
  *
  * The first is that no handler tests the phase. A button is enabled by asking the machine
  * `can(event)` — the same question the next `dispatch` would answer — so the set of things you may
  * do right now is held by the schema and read off it, never mirrored here. Delete a rule from the
- * table and the button goes grey; add one and it lights up. There is no list of what is allowed
- * when, because there cannot be two.
+ * table and the button goes grey; add one and it lights up. The question narrows by payload too:
+ * once anna has signed, `can("sign", { who: "anna", … })` is false while the same question about
+ * boris is still true, and the buttons diverge without any code about signers.
  *
  * The second is the wait. `submit` emits `gate`, this file runs the checks and dispatches
  * `checked` back, and in between the machine sits in `checking` — a phase, with no `write` rule in
  * it, which is what makes the document uneditable while CI has it. The waiting is in the machine.
  * Nothing here holds a promise, a flag, or a boolean called `busy`.
+ *
+ * The signature is real: ECDSA P-256 over the document text, computed here before the event is
+ * dispatched — WebCrypto is asynchronous and the machine is not, so the signing happens in the
+ * handler and the machine receives a finished signature.
  */
 import { TRANSITION } from "@evgkch/fsmjs";
+import { FsmjsDesk, fromMachine } from "@evgkch/fsmjs-inspector/ui";
 import { QUORUM, flow } from "./machine.js";
 import { gate } from "./gate.js";
 import type { Closed, Fault } from "./types.js";
-
-/** The two people who may sign. A real one would ask a directory; this one has a guild of two. */
-const BOARD = ["dana", "ravi"] as const;
 
 const el = <T extends HTMLElement>(id: string) =>
   document.getElementById(id) as T;
 
 const doc = el<HTMLTextAreaElement>("doc");
+const rev = el<HTMLSelectElement>("rev");
+const revOptions = [...rev.querySelectorAll("option")];
 const why = el<HTMLInputElement>("why");
 const phaseOut = el<HTMLElement>("phase");
-const sizeOut = el<HTMLElement>("size");
+const roundOut = el<HTMLElement>("round");
 const faultsOut = el<HTMLUListElement>("faults");
 const settledBox = el<HTMLElement>("settled");
 const closedOut = el<HTMLUListElement>("closed");
@@ -38,9 +43,37 @@ const submit = el<HTMLButtonElement>("submit");
 const reject = el<HTMLButtonElement>("reject");
 const ship = el<HTMLButtonElement>("ship");
 const withdraw = el<HTMLButtonElement>("withdraw");
-const signs = BOARD.map(
-  (who) => [who, el<HTMLButtonElement>(`sign-${who}`)] as const,
-);
+
+/** Who may sign: one button per board member, the name in `data-sign`. */
+const signs = [
+  ...document.querySelectorAll<HTMLButtonElement>("[data-sign]"),
+].map((button) => [button.dataset["sign"]!, button] as const);
+
+// ── the keys, and the signature ─────────────────────────────────────────────
+
+/** One P-256 keypair per board member, generated on load. A real pipeline would look them up. */
+const keys = new Map<string, CryptoKeyPair>();
+for (const [who] of signs)
+  keys.set(
+    who,
+    await crypto.subtle.generateKey(
+      { name: "ECDSA", namedCurve: "P-256" },
+      false,
+      ["sign", "verify"],
+    ),
+  );
+
+/** The signature itself: ECDSA over the document text, hex-encoded. */
+async function autograph(who: string, text: string): Promise<string> {
+  const bytes = await crypto.subtle.sign(
+    { name: "ECDSA", hash: "SHA-256" },
+    keys.get(who)!.privateKey,
+    new TextEncoder().encode(text),
+  );
+  return [...new Uint8Array(bytes)]
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
 
 // ── input: straight to the machine, with no phase test on the way ───────────
 
@@ -48,26 +81,28 @@ doc.addEventListener("input", () => flow.dispatch("write", doc.value));
 submit.addEventListener("click", () => flow.dispatch("submit"));
 ship.addEventListener("click", () => flow.dispatch("ship"));
 withdraw.addEventListener("click", () => flow.dispatch("withdraw"));
-reject.addEventListener("click", () =>
-  flow.dispatch("reject", {
-    who: "dana",
-    why: why.value.trim() || "no reason given",
-  }),
-);
+// The signature is computed over the text as it stands; whether the machine still accepts the
+// event after the await is the machine's answer, as everywhere else.
 for (const [who, button] of signs)
-  button.addEventListener("click", () => flow.dispatch("sign", who));
+  button.addEventListener("click", async () =>
+    flow.dispatch("sign", {
+      who,
+      sig: await autograph(who, flow.state.context.doc.text),
+    }),
+  );
+
+// The reason box is cleared only if the dispatch was accepted — the returned boolean says so.
+reject.addEventListener("click", () => {
+  const sent = flow.dispatch("reject", {
+    who: rev.value,
+    why: why.value.trim() || "no reason given",
+  });
+  if (sent) why.value = "";
+});
 
 // ── the gate, driven by what the machine emits ──────────────────────────────
 
-/**
- * The pipeline's one side effect, and it is deferred twice over.
- *
- * Once because it must be: this listener runs *inside* the transition that emitted `gate`, and
- * the library refuses a dispatch from in there — a transition inside a transition would let the
- * inner commit be overwritten by the outer, so it throws rather than corrupt the run. Once
- * because CI takes a moment, and a phase that begins and ends in the same tick is a phase nobody
- * ever sees. The delay is a lie about the duration and the truth about the shape.
- */
+// `setTimeout`, because a nested `dispatch` is forbidden; the 700 ms stand in for CI.
 flow.rx.on("gate", ({ text }) => {
   setTimeout(() => flow.dispatch("checked", gate(text)), 700);
 });
@@ -114,9 +149,10 @@ function paint(): void {
   document.body.dataset["phase"] = s.type;
   phaseOut.textContent = s.type;
 
-  // The document is written by the machine and not by the box: an edit that never reached a
-  // `write` rule — one typed while the gate had it — must not survive on screen.
+  // The text comes from the machine, and the box is read-only whenever `write` cannot fire —
+  // the same `can` the buttons use. An edit the schema refused never shows.
   if (doc.value !== s.context.doc.text) doc.value = s.context.doc.text;
+  doc.readOnly = !flow.can("write", doc.value);
 
   // What is open right now, which is a fact about the phase and lasts as long as the phase does.
   faultsOut.replaceChildren(
@@ -139,10 +175,10 @@ function paint(): void {
       ? s.context.signs
       : [];
   signsOut.textContent = held.length
-    ? `${held.map((x) => x.who).join(", ")} — ${held.length}/${QUORUM}`
+    ? `${held.map((x) => `${x.who} ${x.sig.slice(0, 8)}…`).join(", ")} — ${held.length}/${QUORUM}`
     : `none yet — ${QUORUM} needed`;
 
-  sizeOut.textContent =
+  roundOut.textContent =
     s.type === "checking"
       ? "running the gate…"
       : s.context.round === 0
@@ -154,9 +190,27 @@ function paint(): void {
   submit.disabled = !flow.can("submit");
   ship.disabled = !flow.can("ship");
   withdraw.disabled = !flow.can("withdraw");
-  reject.disabled = !flow.can("reject", { who: "dana", why: "" });
-  for (const [who, button] of signs) button.disabled = !flow.can("sign", who);
+  for (const [who, button] of signs)
+    button.disabled = !flow.can("sign", { who, sig: "" });
+  // A signer is disabled inside the dropdown by the same question; if the selected reviewer is
+  // closed, the selection moves to an open one.
+  for (const option of revOptions)
+    option.disabled = !flow.can("reject", { who: option.value, why: "" });
+  const open = revOptions.find((o) => !o.disabled);
+  if (rev.selectedOptions[0]?.disabled && open) rev.value = open.value;
+  reject.disabled = !flow.can("reject", { who: rev.value, why: "" });
 }
 
 flow.rx.on(TRANSITION, paint);
 paint();
+
+// ── the machine, drawn ────────────────────────────────────────────────────────
+// The inspector's widgets on the same `flow`: the desk wires each to one subject and focus and
+// gives it a switch; the widgets hear the machine themselves.
+const desk = new FsmjsDesk();
+desk.wiring = { subject: fromMachine(flow) };
+el<HTMLElement>("board").append(desk);
+for (const widget of document.querySelectorAll<HTMLElement>(
+  "fsmjs-legend, fsmjs-diagram, fsmjs-history",
+))
+  desk.enroll(widget as Parameters<typeof desk.enroll>[0]);

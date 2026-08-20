@@ -11,12 +11,15 @@
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "typecheck:only": "tsc --noEmit"
+    "typecheck:only": "tsc --noEmit",
+    "test": "node scripts/pages.mjs"
   },
   "dependencies": {
     "@evgkch/fsmjs": "file:.."
   },
   "devDependencies": {
+    "@evgkch/fsmjs-inspector": "^0.0.6",
+    "happy-dom": "^20.11.6",
     "prettier": "^3.9.6",
     "typescript": "^5.9.3",
     "vite": "^8.2.0"

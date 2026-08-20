@@ -24,39 +24,42 @@
                 </p>
             </header>
 
-            <ol class="phases" aria-label="Machine phases">
-                <li data-for="empty">empty</li>
-                <li data-for="ready">ready</li>
-                <li data-for="drawing">drawing</li>
-                <li data-for="moving">moving</li>
-                <li data-for="resizing">resizing</li>
-            </ol>
+            <!-- The machine's states, drawn by the inspector's legend: the current one filled,
+                 every capsule in its lane colour. -->
+            <fsmjs-legend kind="states"></fsmjs-legend>
 
             <div id="area">
                 <div id="box"></div>
             </div>
 
-            <div class="readout">
-                <div class="stat">
-                    <span class="label">Rectangle</span>
-                    <span class="value" id="rect">—</span>
+            <!-- The same machine, drawn by the inspector's widgets. The desk wires them to one
+                 subject and gives each a switch; the readout stands on the same bar. -->
+            <section class="machine">
+                <div class="machine-bar">
+                    <h2>The machine</h2>
+                    <div class="readout">
+                        <div class="stat">
+                            <span class="label">Rectangle</span>
+                            <span class="value" id="rect">—</span>
+                        </div>
+                        <div class="stat">
+                            <span class="label">Undo</span>
+                            <span class="value" id="undo">0</span>
+                        </div>
+                        <div class="stat keys">
+                            <span class="label">Keys</span>
+                            <span class="value"
+                                ><kbd>Esc</kbd> cancel · <kbd>⌘/Ctrl</kbd>+<kbd
+                                    >Z</kbd
+                                >
+                                undo</span
+                            >
+                        </div>
+                    </div>
+                    <div id="board"></div>
                 </div>
-                <div class="stat">
-                    <span class="label">Undo stack</span>
-                    <span class="value" id="undo">0</span>
-                </div>
-                <div class="stat keys">
-                    <span class="label">Keys</span>
-                    <span class="value"
-                        ><kbd>Esc</kbd> cancel · <kbd>⌘/Ctrl</kbd>+<kbd>Z</kbd>
-                        undo drag</span
-                    >
-                </div>
-            </div>
-
-            <section class="trace">
-                <h2>Transitions</h2>
-                <pre id="log" aria-live="polite"></pre>
+                <fsmjs-diagram></fsmjs-diagram>
+                <fsmjs-history></fsmjs-history>
             </section>
         </main>
 

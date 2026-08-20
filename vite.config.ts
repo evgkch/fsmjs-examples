@@ -11,6 +11,12 @@ export default defineConfig({
     // and a listener on one would never hear the other. One copy, this one.
     dedupe: ["@evgkch/fsmjs"],
   },
+  optimizeDeps: {
+    // Prebundled, the inspector would carry a copy of the library inside the
+    // bundle — the second copy the line above exists to prevent. Served as
+    // source, its import resolves to the page's one copy.
+    exclude: ["@evgkch/fsmjs-inspector"],
+  },
   build: {
     // Vite does not look for pages on its own — every example is listed here.
     rollupOptions: {
@@ -18,6 +24,7 @@ export default defineConfig({
         index: "index.html",
         "selection-rect": "selection-rect/index.html",
         review: "review/index.html",
+        form: "form/index.html",
       },
     },
   },

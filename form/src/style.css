@@ -1,0 +1,306 @@
+@import "../../tokens/tokens.css";
+
+@layer tokens, page;
+
+/* Form example — light and dark, no framework. */
+
+/*
+ * What the shared vocabulary has no opinion about, because it belongs to this page and to
+ * nothing else: the lift the panels sit on.
+ */
+@layer page {
+    :root {
+        /* The examples' frames are smaller than the inspector's. */
+        --radius: 18px;
+
+        --shadow:
+            0 1px 2px oklch(22% 0.012 264 / 0.05),
+            0 8px 24px -12px oklch(22% 0.012 264 / 0.18);
+    }
+
+    @media (prefers-color-scheme: dark) {
+        :root {
+            --shadow:
+                0 1px 2px oklch(0% 0 0 / 0.4),
+                0 12px 32px -14px oklch(0% 0 0 / 0.7);
+        }
+    }
+
+    body {
+        margin: 0;
+        padding: clamp(1.5rem, 5vw, 3.5rem) 1.25rem 4rem;
+        background: var(--bg);
+        color: var(--ink);
+        font: 400 15px/1.6 var(--main-font);
+    }
+
+    main {
+        max-width: 52rem;
+        margin: 0 auto;
+        display: grid;
+        gap: 1.5rem;
+    }
+
+    /* ── header ─────────────────────────────────────────────────────────────── */
+
+    header {
+        display: grid;
+        gap: 0.4rem;
+    }
+
+    .eyebrow {
+        margin: 0;
+        font-size: 0.72rem;
+        font-weight: 600;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+        color: var(--accent);
+    }
+
+    h1 {
+        margin: 0;
+        font-size: clamp(1.5rem, 4vw, 1.9rem);
+        font-weight: 620;
+        letter-spacing: -0.021em;
+    }
+
+    .lede {
+        margin: 0;
+        max-width: 40rem;
+        color: var(--muted);
+        text-wrap: pretty;
+    }
+
+    code {
+        font: 500 0.9em/1 var(--mono-font);
+        color: var(--ink);
+    }
+
+    /* ── the work: the form, and its readout beside it ──────────────────────── */
+
+    .work {
+        display: grid;
+        grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+        gap: var(--step-4);
+        align-items: start;
+    }
+
+    @media (max-width: 46rem) {
+        .work {
+            grid-template-columns: minmax(0, 1fr);
+        }
+    }
+
+    .paper,
+    .panel {
+        display: grid;
+        gap: var(--step-3);
+        padding: var(--step-4);
+        border: 1px solid var(--line-firm);
+        border-radius: var(--radius);
+        background: var(--surface);
+        box-shadow: var(--shadow);
+    }
+
+    h2.label,
+    .stat .label,
+    .answer .label {
+        margin: 0;
+        font-size: 0.72rem;
+        font-weight: 500;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--faint);
+    }
+
+    /* ── the fields ─────────────────────────────────────────────────────────── */
+
+    .row {
+        display: grid;
+        gap: 0.25rem;
+    }
+
+    .row label {
+        font-size: 0.72rem;
+        font-weight: 500;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--faint);
+    }
+
+    input[type="text"] {
+        min-width: 0;
+        height: var(--step-5);
+        padding: 0 var(--step-3);
+        border: 1px solid var(--line);
+        border-radius: var(--radius-sm);
+        background: var(--bg);
+        color: var(--ink);
+        font: 400 0.85rem/1 var(--main-font);
+    }
+
+    input[type="text"]:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+    }
+
+    /* Locked because the machine says so: no `input` rule where it stands. */
+    input[type="text"]:read-only {
+        opacity: 0.62;
+    }
+
+    input[aria-invalid="true"] {
+        border-color: var(--warn);
+    }
+
+    /* One line under the field: what is wrong with it, or nothing. */
+    .fault {
+        margin: 0;
+        min-height: 1.1em;
+        font-size: 0.78rem;
+        color: var(--warn);
+    }
+
+    .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--step-2);
+    }
+
+    button {
+        padding: 0 var(--step-3);
+        height: var(--step-5);
+        border: 1px solid var(--line-firm);
+        border-radius: var(--radius-sm);
+        background: var(--surface);
+        color: var(--ink);
+        font: 500 0.82rem/1 var(--main-font);
+        cursor: pointer;
+        transition:
+            border-color var(--quick),
+            background-color var(--quick),
+            color var(--quick);
+    }
+
+    button:hover:not(:disabled) {
+        border-color: var(--accent);
+        color: var(--accent);
+    }
+
+    /* Off, because the machine says so: `can()` and nothing else greys these. */
+    button:disabled {
+        opacity: 0.38;
+        cursor: not-allowed;
+    }
+
+    .hint {
+        margin: 0;
+        font-size: 0.8rem;
+        color: var(--faint);
+        text-wrap: pretty;
+    }
+
+    /* ── the panel's readout ────────────────────────────────────────────────── */
+
+    .stat {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: var(--step-3);
+    }
+
+    .stat .value {
+        font: 500 0.92rem/1.5 var(--mono-font);
+        font-variant-numeric: tabular-nums;
+    }
+
+    .answer {
+        display: grid;
+        gap: 0.25rem;
+    }
+
+    .why {
+        margin: 0;
+        min-height: 2.6em;
+        font: 400 0.85rem/1.5 var(--mono-font);
+        color: var(--muted);
+        text-wrap: pretty;
+    }
+
+    .why.refusal {
+        color: var(--warn);
+    }
+
+    /* One line per message; a growing journal scrolls inside its frame. */
+    .wire {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        max-height: 8.5rem;
+        overflow: auto;
+        display: grid;
+        gap: 2px;
+        font: 400 0.78rem/1.6 var(--mono-font);
+        color: var(--muted);
+    }
+
+    /* ── the machine floor ──────────────────────────────────────────────────── */
+
+    /* The machine block: the widgets bring their own frames; the section spaces them. On a
+   wide screen the diagram stands beside the run, as in the inspector; a widget switched off
+   yields the row to its neighbour. */
+    .machine {
+        display: grid;
+        gap: 0.75rem;
+    }
+
+    @media (min-width: 60rem) {
+        .machine {
+            grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+            align-items: stretch;
+        }
+
+        .machine-bar,
+        .machine fsmjs-legend {
+            grid-column: 1 / -1;
+        }
+
+        .machine fsmjs-diagram[hidden] ~ fsmjs-history {
+            grid-column: 1 / -1;
+        }
+
+        .machine fsmjs-diagram:has(~ fsmjs-history[hidden]) {
+            grid-column: 1 / -1;
+        }
+
+        /* Fixed height on the floor: a growing run scrolls inside its frame instead of pushing
+       the page. */
+        .machine fsmjs-diagram,
+        .machine fsmjs-history {
+            height: 17rem;
+        }
+    }
+
+    /* Stacked on a narrow screen, the frames still keep the page still. */
+    .machine fsmjs-diagram,
+    .machine fsmjs-history {
+        max-height: 17rem;
+    }
+
+    .machine-bar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+    }
+
+    .machine-bar h2 {
+        margin: 0;
+        font-size: 0.72rem;
+        font-weight: 500;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--muted);
+    }
+}

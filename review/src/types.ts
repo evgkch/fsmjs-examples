@@ -1,14 +1,9 @@
 /**
  * The three carriers, and what each phase of a review carries.
  *
- * A submission is not one object that grows fields as it moves. It is a different object in every
- * phase, and the phase decides which — a list of faults exists only where something is blocked, a
- * list of signatures only where somebody has signed, a timestamp only once it has shipped. That is
- * what `Q` is for: state ↦ context, so the field and the phase it belongs to cannot come apart.
- *
- * Which is worth saying twice for a review pipeline in particular. The bug this shape rules out —
- * a document that is `shipped` and still has an open fault list, or `blocked` with a signature on
- * it — is the exact bug a workflow written as one record and a status string keeps having.
+ * The submission is a different object in every phase: a fault list exists only in `blocked`,
+ * signatures only from `review` on, a timestamp only in `shipped`. `Q` binds field to phase, and
+ * that rules out the record-plus-status bug — a `shipped` document with an open fault list.
  */
 import type { IEvent, IState, Merge } from "@evgkch/fsmjs";
 
@@ -16,11 +11,8 @@ import type { IEvent, IState, Merge } from "@evgkch/fsmjs";
 export type Doc = { readonly name: string; readonly text: string };
 
 /**
- * One thing wrong with a submission.
- *
- * `validate` finds most of them and `analyze` the rest; a `blocker` is what the gate refuses on,
- * a `caution` is what it lets through and the reviewers are told about. The library's own two
- * severities map onto the pair, and the house rules below add to both.
+ * One thing wrong with a submission. A `blocker` is what the gate refuses on; a `caution` passes
+ * and is shown to the reviewers. The library's two severities map onto the pair.
  */
 export type Fault = {
   readonly rank: "blocker" | "caution";
@@ -28,27 +20,22 @@ export type Fault = {
   readonly what: string;
 };
 
-/** What the gate answered, whole — the machine reads it and decides which way to go. */
-export type Report = {
-  readonly faults: readonly Fault[];
-  /** States, rules, and how many of the states a run can actually get to. */
-  readonly size: { states: number; rules: number; reached: number };
+/**
+ * A sign-off: who, when, and the signature itself — ECDSA P-256 over the document text,
+ * hex-encoded. The text cannot change while signatures are collected (no `write` rule in
+ * `review`), so every signature is over the same text. Any edit produces a new text, which is
+ * why every path out of `review` drops the signatures: they are bound to the old one.
+ */
+export type Sign = {
+  readonly who: string;
+  readonly at: number;
+  readonly sig: string;
 };
 
-/** A sign-off: who, and when they gave it. */
-export type Sign = { readonly who: string; readonly at: number };
-
 /**
- * Something that was raised against the submission and has been answered.
- *
- * Raising it is a phase — `blocked` while the gate is refusing, `changes` while a reviewer is
- * waiting — and a phase ends. What must not end with it is the record: a review that forgets what
- * was asked as soon as somebody addresses it cannot tell you why the schema looks the way it does,
- * and the fourth round of it is the same argument as the first with nobody able to prove it.
- *
- * So an item is *closed*, not deleted. It keeps the round it was raised in and who raised it, and
- * it stays on the ticket for the rest of the ticket's life. Answered is not the same as never
- * asked; if the revision did not really fix it, the next round raises it again, beside the old one.
+ * An item that was answered: the round, the author, the text. Closed, not deleted — the record
+ * stays on the ticket, and if a revision did not fix the problem, the next gate run enters the
+ * same item again beside the old one.
  */
 export type Closed = {
   readonly round: number;
@@ -57,13 +44,8 @@ export type Closed = {
 };
 
 /**
- * The submission itself — the part that survives every phase.
- *
- * A phase adds what only that phase has: a fault list while blocked, signatures while in review, a
- * timestamp once shipped. Underneath all of them is this, unchanged: the document, which round it
- * is on, and everything that has been settled about it. Splitting the two is the whole point of a
- * context that belongs to the state — what is carried through is written once, here, and what is
- * temporary cannot outlive the phase that owns it.
+ * The part of the submission that survives every phase: the document, the round, the settled
+ * items. A phase adds what only that phase has.
  */
 export type Ticket = {
   readonly doc: Doc;
@@ -90,10 +72,10 @@ export type Q = Merge<
 export type Σ = Merge<
   | IEvent<"write", string>
   | IEvent<"submit">
-  // The gate answering. It is an event like any other, which is what makes the wait a phase of
-  // the machine rather than a flag beside it.
-  | IEvent<"checked", Report>
-  | IEvent<"sign", string>
+  // The gate answering, and the answer is the list of faults, whole. It is an event like any
+  // other, which is what makes the wait a phase of the machine rather than a flag beside it.
+  | IEvent<"checked", readonly Fault[]>
+  | IEvent<"sign", { who: string; sig: string }>
   | IEvent<"reject", { who: string; why: string }>
   | IEvent<"ship">
   | IEvent<"withdraw">

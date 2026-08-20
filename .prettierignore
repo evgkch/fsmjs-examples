@@ -6,3 +6,6 @@ dist/
 *.md
 
 package-lock.json
+
+# The shared vocabulary is a submodule, formatted in its own repository.
+tokens/

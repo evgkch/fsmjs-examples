@@ -1,37 +1,16 @@
 /**
- * The pipeline itself.
+ * The pipeline. The schema comes first — it is the whole policy; the functions it names follow,
+ * declared with `function` so they hoist.
  *
- * The schema comes first, because the schema *is* the description of the process. Read it once,
- * top to bottom, and you have read the whole policy: who may do what, from where, and what it
- * takes to get to the end. Everything under it is the bodies of the functions the schema names,
- * declared with `function` so they hoist and the file can be in that order.
- *
- * What a workflow written this way cannot do is the thing workflows written as a status column
- * always do. There is no `if (status === "checking") return;` anywhere in this example, and there
- * is no way to add one by accident: `write` is not a rule of `checking`, so a keystroke that
- * arrives while the gate is running is refused by the table rather than by somebody remembering
- * to check. The same goes for signing a draft, shipping something unapproved, and editing a
- * document that has already gone out — all four are absences in the schema, not code.
- *
- * `emit` is the other half. The machine never runs the gate and never writes to the page: it says
- * `gate` when validation is due and `logged` when something happened worth recording, and the app
- * around it does those things. So the pipeline can be read, tested and drawn without a DOM, and
- * the wait for CI is a phase of the machine rather than a promise held somewhere off to one side.
+ * There is no `if (status === …)` anywhere: an action that is not allowed in a phase is a rule
+ * that is absent from that phase's cell, and `dispatch` refuses it. The machine also runs no side
+ * effects itself: it emits `gate` and `logged`, and the app around it acts on them — so the
+ * pipeline can be read, tested and drawn without a DOM.
  */
 import { StateMachine } from "@evgkch/fsmjs";
-import type {
-  Closed,
-  Doc,
-  Fault,
-  Q,
-  Report,
-  Sign,
-  Ticket,
-  Σ,
-  Λ,
-} from "./types.js";
+import type { Closed, Doc, Fault, Q, Sign, Ticket, Σ, Λ } from "./types.js";
 
-/** How many sign-offs it takes. Two, and never the same person twice — see `signed`. */
+/** How many sign-offs it takes. Two, of a board of three, and never the same person twice. */
 export const QUORUM = 2;
 
 const START: Doc = {
@@ -49,12 +28,18 @@ const START: Doc = {
 
 // ── the schema ──────────────────────────────────────────────────────────────
 //
-// Two cells hold the whole of the interesting logic, and both are a list of guarded rules ending
-// in an unguarded one — so `validate` finds no dead rule, and there is no state of the world the
-// table has no answer for.
+// The guards differ by cell, on purpose.
 //
-//   checking · checked   the gate answered: blocked, or into review
-//   review   · sign      that signature was the last one needed, or it was not
+//   checking · checked   guarded, then unguarded: the gate's answer has an outcome either way
+//   review   · sign      guarded throughout: a repeat signature satisfies neither guard, so
+//                        `dispatch` returns false and `can("sign", …)` is false with it —
+//                        the page disables that signer's button from the same question
+//   reject               guarded by `unsigned`: a request for changes from somebody whose
+//                        signature stands would contradict it. The board is one larger than
+//                        the quorum, so even in `approved` one reviewer can still reject
+//
+// `validate` finds no dead rule: a rule behind an unguarded one can never fire, and no cell
+// has one.
 
 export const flow = new StateMachine<Q, Σ, Λ>(
   {
@@ -77,19 +62,20 @@ export const flow = new StateMachine<Q, Σ, Λ>(
     },
 
     review: {
-      // Three rules, and the cell is the whole sign-off policy: the signature that completes the
-      // quorum, one from somebody who has already given theirs, and any other. Guarded, guarded,
-      // unguarded — so there is no arrangement of signers the table has no answer for, and
-      // `validate` finds no rule behind an unguarded one.
+      // Two rules: the signature that completes the quorum, and one that does not yet. There is
+      // no rule for a repeat signature — it satisfies neither guard, and `dispatch` returns
+      // false.
       sign: [
         { when: last, to: ["approved", sealed], emit: ["logged", quorum] },
-        // Nothing changes, and the machine says so by arriving where it was with the context it
-        // had: `review` to `review` needs no operation, because the context it carries is already
-        // the context the target wants.
-        { when: already, to: "review", emit: ["logged", twice] },
-        { to: ["review", countersigned], emit: ["logged", oneMore] },
+        {
+          when: unsigned,
+          to: ["review", countersigned],
+          emit: ["logged", oneMore],
+        },
       ],
-      reject: [{ to: ["changes", asked], emit: ["logged", sentBack] }],
+      reject: [
+        { when: unsigned, to: ["changes", asked], emit: ["logged", sentBack] },
+      ],
       // The author pulling it back out of review. Their own document, their own call.
       withdraw: [{ to: ["draft", restarted], emit: ["logged", pulled] }],
     },
@@ -102,8 +88,10 @@ export const flow = new StateMachine<Q, Σ, Λ>(
 
     approved: {
       ship: [{ to: ["shipped", stamped], emit: ["logged", shipped] }],
-      // Approved is not final. Somebody may still stop it before it goes out.
-      reject: [{ to: ["changes", asked], emit: ["logged", sentBack] }],
+      // Approved is not final: the board member who did not sign may still stop it.
+      reject: [
+        { when: unsigned, to: ["changes", asked], emit: ["logged", sentBack] },
+      ],
     },
 
     // The end, and it says so by having no rules at all: `analyze` calls it terminal, and every
@@ -116,37 +104,33 @@ export const flow = new StateMachine<Q, Σ, Λ>(
 // ── guards ──────────────────────────────────────────────────────────────────
 
 /** Did the gate find anything that blocks. Cautions do not — they go to the reviewers. */
-function clean(_c: Ticket, report: Report): boolean {
-  return !report.faults.some((f) => f.rank === "blocker");
+function clean(_c: Ticket, faults: readonly Fault[]): boolean {
+  return !faults.some((f) => f.rank === "blocker");
 }
 
 /**
- * Is this the signature that completes the quorum.
- *
- * Asked of the context and the payload and nothing else, which is why it can be read on its own:
- * a second signature from somebody who has already signed does not complete anything, and this is
- * the one place that fact is written down.
+ * Is this the signature that completes the quorum. A repeat from somebody who has already signed
+ * completes nothing, and this is the one place that fact is written down.
  */
-function last(c: { signs: readonly Sign[] }, who: string): boolean {
-  return !signed(c.signs, who) && c.signs.length + 1 >= QUORUM;
+function last(c: { signs: readonly Sign[] }, p: { who: string }): boolean {
+  return !given(c.signs, p.who) && c.signs.length + 1 >= QUORUM;
 }
 
-function already(c: { signs: readonly Sign[] }, who: string): boolean {
-  return signed(c.signs, who);
+/**
+ * No standing signature from this person. On `sign` it admits a first signature; on `reject` it
+ * admits a request for changes — one from a person whose signature stands would contradict it.
+ * The guards of a cell run in order, so on `sign` the quorum case is already taken by `last`.
+ */
+function unsigned(c: { signs: readonly Sign[] }, p: { who: string }): boolean {
+  return !given(c.signs, p.who);
 }
 
-const signed = (signs: readonly Sign[], who: string) =>
+const given = (signs: readonly Sign[], who: string) =>
   signs.some((s) => s.who === who);
 
 // ── operations: each returns the context of the phase being entered ─────────
-
-/**
- * Every one of these returns the context of the phase being *entered*, and every one of them
- * carries the ticket through unchanged unless it has a reason not to. That is the split worth
- * watching: `...c` is the submission moving on, and what is written beside it is what the new
- * phase adds. Nothing has to remember to copy the record forward, because forgetting it would be
- * the odd thing to write rather than the easy one.
- */
+//
+// `...c` carries the ticket through; what is written beside it is what the new phase adds.
 
 function edited(c: Ticket, text: string): Ticket {
   return { ...c, doc: { ...c.doc, text } };
@@ -158,24 +142,18 @@ function sent(c: Ticket): Ticket {
 }
 
 /**
- * The author pulling it back out of review: nothing was raised, so there is nothing to close.
- *
- * The ticket is rebuilt rather than passed along, and the three lines are the point. Returning the
- * context whole would typecheck — a `review` context *is* a `Ticket`, with two extra fields — and
- * would carry the signatures into the draft, where the type says they do not exist and the page
- * would never look for them. Naming what survives is what makes "temporary" mean anything.
+ * The author withdraws from review. Rebuilt, not spread: returning `c` whole would typecheck —
+ * a `review` context *is* a `Ticket` with two extra fields — and would carry the signatures into
+ * `draft`, whose type does not include them.
  */
 function restarted(c: Ticket): Ticket {
   return { doc: c.doc, round: c.round, closed: c.closed };
 }
 
 /**
- * Answering what the gate refused on.
- *
- * Every blocker of that round is closed as the revision goes in — closed, and kept. Whether the
- * revision really fixed it is not this function's opinion to have: the next `submit` runs the gate
- * again, and anything still wrong is raised again, in a later round, beside the entry that says it
- * was raised before. A pipeline that erased the first one could not show you that.
+ * Answers what the gate refused on: every blocker of the round is closed into the record as the
+ * revision goes in. Whether the revision fixed it, the next `submit` shows — anything still wrong
+ * is entered again, beside the old record.
  */
 function fixed(c: Ticket & { faults: readonly Fault[] }, text: string): Ticket {
   const settled: Closed[] = c.faults
@@ -206,44 +184,69 @@ function addressed(
 
 function faulted(
   c: Ticket,
-  report: Report,
+  faults: readonly Fault[],
 ): Ticket & { faults: readonly Fault[] } {
-  return { ...c, faults: report.faults };
+  return { ...c, faults };
 }
 
 /** Into review carrying what the gate let through: the cautions, for a human to weigh. */
 function opened(
   c: Ticket,
-  report: Report,
+  faults: readonly Fault[],
 ): Ticket & { notes: readonly Fault[]; signs: readonly Sign[] } {
   return {
     ...c,
-    notes: report.faults.filter((f) => f.rank === "caution"),
+    notes: faults.filter((f) => f.rank === "caution"),
     signs: [],
   };
 }
 
-/** A signature that is neither the last nor a repeat — the guards above have ruled both out. */
+/** A signature short of the quorum: the review context is kept, the list grows by one. */
 function countersigned(
   c: Ticket & { notes: readonly Fault[]; signs: readonly Sign[] },
-  who: string,
-) {
-  return { ...c, signs: [...c.signs, { who, at: Date.now() }] };
+  p: { who: string; sig: string },
+): Ticket & { notes: readonly Fault[]; signs: readonly Sign[] } {
+  return {
+    ...c,
+    signs: [...c.signs, { who: p.who, at: Date.now(), sig: p.sig }],
+  };
 }
 
+/**
+ * The signature that completes the quorum, and the exit from review.
+ *
+ * Rebuilt, not spread, for the reason `restarted` gives: `notes` belongs to `review`, and the
+ * `approved` context does not include it — a spread would carry it along anyway.
+ */
 function sealed(
-  c: Ticket & { signs: readonly Sign[] },
-  who: string,
+  c: Ticket & { notes: readonly Fault[]; signs: readonly Sign[] },
+  p: { who: string; sig: string },
 ): Ticket & { signs: readonly Sign[] } {
-  return { ...c, signs: [...c.signs, { who, at: Date.now() }] };
+  return {
+    doc: c.doc,
+    round: c.round,
+    closed: c.closed,
+    signs: [...c.signs, { who: p.who, at: Date.now(), sig: p.sig }],
+  };
 }
 
-/** Raised, not yet answered: it lives in the phase until an edit closes it. */
+/**
+ * The request for changes and its author — the `changes` context.
+ *
+ * Also rebuilt: both source contexts include signatures, and the `changes` context does not.
+ * The signatures are bound to the text under review anyway — see `Sign`.
+ */
 function asked(
   c: Ticket,
   p: { who: string; why: string },
 ): Ticket & { asked: string; by: string } {
-  return { ...c, asked: p.why, by: p.who };
+  return {
+    doc: c.doc,
+    round: c.round,
+    closed: c.closed,
+    asked: p.why,
+    by: p.who,
+  };
 }
 
 function stamped(c: Ticket & { signs: readonly Sign[] }) {
@@ -275,10 +278,6 @@ function refused(c: Ticket & { faults: readonly Fault[] }) {
 
 function oneMore(c: { signs: readonly Sign[] }) {
   return line(`signed off — ${QUORUM - c.signs.length} to go`);
-}
-
-function twice(_c: unknown, who: string) {
-  return line(`${who} has already signed this one`);
 }
 
 function quorum(c: { signs: readonly Sign[] }) {

@@ -2,7 +2,7 @@
 
 # fsmjs — examples
 
-Examples for [`@evgkch/fsmjs`](https://github.com/evgkch/fsmjs), a small typed Mealy state machine. Each one is a working page built on the published package: plain HTML and TypeScript, no framework. Every example comes with a walkthrough that goes through the same code line by line.
+Examples for [`@evgkch/fsmjs`](https://github.com/evgkch/fsmjs), a small typed Mealy state machine. Each one is a working page built on the published package: plain HTML and TypeScript, no framework. Every example comes with a walkthrough of the same code, line by line.
 
 **Live: [evgkch.github.io/fsmjs](https://evgkch.github.io/fsmjs/)**
 
@@ -10,6 +10,7 @@ Examples for [`@evgkch/fsmjs`](https://github.com/evgkch/fsmjs), a small typed M
 | ---------------------------------------- | ---------------------------------------------------------- | --------------------------------------------------------------------------------- |
 | [`selection-rect`](selection-rect)       | [open](https://evgkch.github.io/fsmjs/selection-rect/)     | [English](selection-rect/README.md) · [Русский](selection-rect/README.ru.md)       |
 | [`review`](review)                       | [open](https://evgkch.github.io/fsmjs/review/)             | [English](review/README.md) · [Русский](review/README.ru.md)                       |
+| [`form`](form)                           | [open](https://evgkch.github.io/fsmjs/form/)               | [English](form/README.md) · [Русский](form/README.ru.md)                           |
 
 ## Running locally
 

@@ -2,7 +2,7 @@
 
 # fsmjs — примеры
 
-Примеры к [`@evgkch/fsmjs`](https://github.com/evgkch/fsmjs), небольшому типизированному автомату Мили. Каждый пример — работающая страница на опубликованном пакете: чистый HTML и TypeScript, без фреймворков. К каждому приложен разбор, который проходит по тому же коду строка за строкой.
+Примеры к [`@evgkch/fsmjs`](https://github.com/evgkch/fsmjs), небольшому типизированному автомату Мили. Каждый пример — работающая страница на опубликованном пакете: чистый HTML и TypeScript, без фреймворков. К каждому приложен разбор того же кода, строка за строкой.
 
 **Сайт: [evgkch.github.io/fsmjs](https://evgkch.github.io/fsmjs/)**
 
@@ -10,6 +10,7 @@
 | ---------------------------------------- | ---------------------------------------------------------- | --------------------------------------------------------------------------------- |
 | [`selection-rect`](selection-rect)       | [открыть](https://evgkch.github.io/fsmjs/selection-rect/)  | [English](selection-rect/README.md) · [Русский](selection-rect/README.ru.md)       |
 | [`review`](review)                       | [открыть](https://evgkch.github.io/fsmjs/review/)          | [English](review/README.md) · [Русский](review/README.ru.md)                       |
+| [`form`](form)                           | [открыть](https://evgkch.github.io/fsmjs/form/)            | [English](form/README.md) · [Русский](form/README.ru.md)                           |
 
 ## Запуск
 

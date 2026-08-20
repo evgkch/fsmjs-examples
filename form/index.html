@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>fsmjs — a form over a flaky wire</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Onest:wght@200..900&display=swap"
+            rel="stylesheet"
+        />
+        <link rel="stylesheet" href="./src/style.css" />
+    </head>
+    <body>
+        <main>
+            <header>
+                <p class="eyebrow">@evgkch/fsmjs example</p>
+                <h1>A form over a flaky wire</h1>
+                <p class="lede">
+                    Typing folds into the context and <code>submit</code> is
+                    guarded by a pure reading of it. Every send carries its
+                    attempt number, and an answer is taken only when the number
+                    matches the attempt in flight: duplicates and stragglers
+                    are dropped by a guard, and three refusals spend the
+                    budget.
+                </p>
+            </header>
+
+            <!-- The machine's states, drawn by the inspector's legend. -->
+            <fsmjs-legend kind="states"></fsmjs-legend>
+
+            <div class="work">
+                <section class="paper">
+                    <h2 class="label">The order</h2>
+                    <div class="row">
+                        <label for="name">Name</label>
+                        <input id="name" type="text" autocomplete="off" />
+                        <p class="fault" data-for="name"></p>
+                    </div>
+                    <div class="row">
+                        <label for="email">Email</label>
+                        <input id="email" type="text" autocomplete="off" />
+                        <p class="fault" data-for="email"></p>
+                    </div>
+                    <div class="row">
+                        <label for="amount">Amount</label>
+                        <input
+                            id="amount"
+                            type="text"
+                            inputmode="numeric"
+                            autocomplete="off"
+                        />
+                        <p class="fault" data-for="amount"></p>
+                    </div>
+                    <div class="actions">
+                        <button id="submit">Submit</button>
+                        <button id="retry">Retry</button>
+                    </div>
+                    <p class="hint">
+                        The server refuses amounts over 900 and delivers every
+                        refusal twice — retry quickly and watch the copy get
+                        dropped in the wire journal. Three refusals give the
+                        form up; touching any field is editing again.
+                    </p>
+                </section>
+
+                <section class="panel">
+                    <div class="stat">
+                        <span class="label">Phase</span>
+                        <span class="value" id="phase">editing</span>
+                    </div>
+                    <div class="stat">
+                        <span class="label">Faults</span>
+                        <span class="value" id="count">—</span>
+                    </div>
+                    <div class="stat">
+                        <span class="label">Attempt</span>
+                        <span class="value" id="attempt">—</span>
+                    </div>
+                    <div class="answer">
+                        <h2 class="label">The server said</h2>
+                        <p class="why" id="verdict">—</p>
+                    </div>
+                    <div class="answer">
+                        <h2 class="label">The wire</h2>
+                        <ol class="wire" id="wire"></ol>
+                    </div>
+                </section>
+            </div>
+
+            <!-- The same machine, drawn by the inspector's widgets. -->
+            <section class="machine">
+                <div class="machine-bar">
+                    <h2>The machine</h2>
+                    <div id="board"></div>
+                </div>
+                <fsmjs-diagram></fsmjs-diagram>
+                <fsmjs-history></fsmjs-history>
+            </section>
+        </main>
+
+        <script type="module" src="./src/main.ts"></script>
+    </body>
+</html>

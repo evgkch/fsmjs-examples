@@ -4,7 +4,7 @@
 
 A complete walkthrough from problem statement to a working state machine: managing a selection rectangle in the browser. The sections follow the order of work — first the transition graph, then context, guards and operations, then integration with the program and analysis. In the code, type definitions are usually placed before the schema, but here they are introduced as needed.
 
-Notation and definitions are given in the [guide](https://github.com/evgkch/fsmjs/blob/master/README.md). References of the form “section 4.3” point to sections of this document; the guide is referenced by section title — “README, “Transition schema””.
+Notation and definitions are given in the [guide](https://github.com/evgkch/fsmjs/blob/master/README.md). References of the form “section 4.2” point to sections of this document; the guide is referenced by section title — “README, “Transition schema””.
 
 **Working project.** The example runs as a page — [live demo](https://evgkch.github.io/fsmjs/selection-rect/). Vite, plain HTML and TypeScript, no frameworks; the commands are run from the root of this repository:
 
@@ -55,7 +55,7 @@ Table 1 — Machine states
 | `moving`   | Moving in progress                       |
 | `resizing` | Resizing in progress                     |
 
-There are four input events: `down`, `move`, `up`, and `cancel`. The first two carry the pointer coordinates together with the size of the area it is in. There are two output events: `draw` with the rectangle and `clear` without payload.
+There are four input events: `down`, `move`, `up`, and `cancel`. The first two contain the pointer coordinates and the size of the area it is in. There are two output events: `draw` with the rectangle and `clear` without payload.
 
 ```ts
 import type { IState, IEvent, Merge } from "@evgkch/fsmjs";
@@ -173,7 +173,7 @@ type Spot = Point & { area: Size };
 
 The move offset is computed from the start point, and cancel reverts the rectangle to what it was at the start of the drag. But the context composition is **different in different states**.
 
-Table 2 — What each state remembers
+Table 2 — What each state holds
 
 | State                   | Content                                                       |
 | ----------------------- | ------------------------------------------------------------- |
@@ -196,7 +196,7 @@ type Sel = Merge<
 >;
 ```
 
-A single context with all fields at once would look shorter, but it would require an initial value for `empty` — which doesn't exist: in the empty state there is no rectangle, no grab point, no handle. We'd have to invent a `blank` with a zero rectangle instead of nothing, and that's not a harmless convention: such a 0×0 rectangle once made it to the screen after an undo and required a patch. A state-dependent context rules that placeholder out: `empty` has no field to put it in.
+A single context with all fields at once would look shorter, but it would require an initial value for `empty` — which doesn't exist: in the empty state there is no rectangle, no grab point, no handle. It would take a placeholder — a `blank` with a zero rectangle — and such a 0×0 rectangle ends up on screen after an undo as if it were real. A state-dependent context rules the placeholder out: `empty` has no field to put it in.
 
 This choice has a consequence: a state and its context only make sense together, so the machine returns them as a single value — `sel.state` of type `FsmState` — where `type` narrows the `context` (README, “Creating a machine and the state”).
 
@@ -207,7 +207,7 @@ This choice has a consequence: a state and its context only make sense together,
 Guards are written in the rules by function names; their implementations are given in section 4.2.
 
 > [!NOTE]
-> Below is a sketch, not a schema that the compiler would accept, and there is no `satisfies` intentionally. Context is tied to the state (section 3): guards read it, and entering a state that stores something without a context function is not allowed. One requires the other, so the full schema only converges in section 5.3 when operations appear. Here we only show where the guard names stand in the rules.
+> Below is a sketch; the compiler would not accept it, and there is no `satisfies` intentionally: guards read the context (section 3), and entering a state with context requires a context function, so the full schema is given in section 5.3, together with the operations. Here we only show where the guard names stand in the rules.
 
 ```ts
 const guarded = {
@@ -324,13 +324,13 @@ Table 3 — Context update functions
 | Function     | What it does                                              |
 | ------------ | ----------------------------------------------------------- |
 | `begin`      | Starts a new rectangle at the pointer point                 |
-| `grab`       | Remembers the point and rectangle at the start of the drag  |
+| `grab`       | Saves the point and rectangle at the start of the drag      |
 | `grabHandle` | The same plus the captured handle                           |
 | `stretch`    | Moves the free corner                                       |
 | `translate`  | Translates by the pointer offset                            |
 | `resize`     | Moves the sides named by the handle                         |
 | `settle`     | Leaving a drag for `ready`: keep the rectangle, drop the rest |
-| `revert`     | Restores the rectangle remembered at capture                |
+| `revert`     | Restores the rectangle saved at capture                     |
 
 The listing below also contains `shot`. It does not update the context but builds the output event's data, and so is covered in section 5.2.
 
@@ -402,7 +402,7 @@ function shot(s: { rect: Rect }) {
 }
 ```
 
-The selection never leaves the canvas, and it is the context-update operations that enforce this, not the drawing code. The context is what the rest of the program reads, so the constraint “rectangle inside the area” belongs to the machine itself rather than to the way it is displayed.
+The selection never goes outside the area, and it is the context-update operations that enforce this, not the drawing code. The context is what the rest of the program reads, so the constraint “rectangle inside the area” belongs to the machine itself rather than to the way it is displayed.
 
 ```ts
 /** A point pulled back into the area — the edge stops at the boundary. */
@@ -424,7 +424,7 @@ function slideInto(r: Rect, a: Size): Rect {
 }
 ```
 
-Constraining only the pointer point would be insufficient; this is most evident in `translate`: if the rectangle is taken by the middle and dragged, the pointer always stays inside the canvas while the far corner moves out. A moved rectangle must keep its size and stop at the boundary, so the constraint applies to the whole rectangle and not to a single one of its points.
+Constraining only the pointer point would be insufficient; this is most evident in `translate`: if the rectangle is taken by the middle and dragged, the pointer always stays inside the area while the far corner moves out. A moved rectangle keeps its size and stops at the boundary: the constraint applies to the whole rectangle and not to a single one of its points.
 
 Each function returns a new object, never mutating the passed one (README, “Limitations”).
 
@@ -490,7 +490,7 @@ const sel = new StateMachine<Sel, Σ, Λ>(
 </div>
 ```
 
-Coordinates are rounded here, at the input, not at the output: `clientX` and the bounding rectangle are fractional when the page is zoomed or on HiDPI screens, while everything downstream — context, tolerance, CSS borders, printed numbers — follows from that single point. Rounding once at the input ensures consistency across all computations.
+Coordinates are rounded once, at the input: `clientX` and the bounding rectangle are fractional when the page is zoomed or on HiDPI screens, and everything downstream — context, guard tolerance, CSS borders — is computed from that point.
 
 ```ts
 const area = document.getElementById("area")!;
@@ -532,11 +532,11 @@ sel.rx.on("clear", () => {
 });
 ```
 
-There are no checks for the current state in the handlers. The `pointermove` event always sends `move`, but in the `ready` state such a transition is not defined in the schema, so `dispatch` returns `false` without changing state (README, “Executing a transition: `dispatch` and `can`”).
+There are no checks for the current state in the handlers. The `pointermove` handler always sends `move`, but the `ready` state has no such rule, so `dispatch` returns `false` without changing state (README, “Executing a transition: `dispatch` and `can`”).
 
 ### 6.2. Cursor
 
-The cursor hints at what action will be performed on press. The answer to the same question is encoded in the schema guards, so the presentation uses the same `handleAt` and `inside` functions. But first it must name the state: in `empty` there is no rectangle, and `type` is the discriminator whose check opens access to context fields.
+The cursor shows what action will be performed on press. The same choice is written in the schema guards, so the same `handleAt` and `inside` are used. The state is checked first: in `empty` there is no rectangle, and after checking the `type` discriminator the context fields are accessible.
 
 ```ts
 function cursor(at: { context: { rect: Rect } }, p: Point) {
@@ -585,7 +585,7 @@ down 300,300 (outside)       drawing   300,300 0×0
 up  (without movement)       empty     —
 ```
 
-The `cancel` event in the middle of resizing reverted the rectangle to what it was at the time of capture: that is stored in the `start` field. Grabbing the `w` edge moved only the left side because `resize` changes the coordinates named by the handle. The `up` event without movement produced a zero-size rectangle; the `tiny` guard discarded it, and the selection was cleared.
+The `cancel` event in the middle of resizing reverted the rectangle to what it was at the time of capture: that is stored in the `start` field. Grabbing the `w` edge moved only the left side because `resize` changes the coordinates named by the handle. The `up` event without movement produced a zero-size rectangle: the `tiny` guard fired, and the selection was cleared.
 
 ## 8. Schema analysis
 
@@ -654,26 +654,23 @@ FROM resizing ON up                   TO ready    WITH settle     EMIT draw  BY 
 FROM resizing ON cancel               TO ready    WITH revert     EMIT draw  BY shot
 ```
 
-The output matches `toRules(sel.schema)` line for line: there is no code in JSON, but the *name* of each operation survives, and the rule line never printed anything but the name. The `WHEN` column also survives, so during validation of the serialized schema, the second `up` rule is still not considered dead (README, “Graph and JSON representation”).
+The output matches `toRules(sel.schema)` line for line: there is no code in JSON, but the *name* of each operation survives, and only the name is printed in a rule line. The `WHEN` column also survives, so during validation of the serialized schema, the second `up` rule is still not considered dead (README, “Graph and JSON representation”).
 
 ## 9. Undo drag
 
-Undo here means rolling back the entire drag, not a single `move` event. The built-in `history` records every transition, so undo would go backwards one pointer step at a time. The `log` function passes the full transition object to the `sink`, allowing us to push records onto a stack under a condition.
+Undo here means rolling back the entire drag, not a single `move` event. The built-in `history` records every transition, so one undo step would revert one pointer sample. `log` hands the full transition object to a sink of your own, so a record is pushed onto a stack under a condition.
 
 ```ts
 import type { FsmState } from "@evgkch/fsmjs";
-import { log, rules } from "@evgkch/fsmjs/debug";
+import { log } from "@evgkch/fsmjs/debug";
 
 const DRAG = ["drawing", "moving", "resizing"];
 const undo: { at: FsmState<Sel> }[] = [];
 
-log(
-  sel,
-  rules((line, t) => {
-    if (DRAG.includes(t.target.type) && !DRAG.includes(t.source.type))
-      undo.push({ at: t.source });
-  }),
-);
+log(sel, (t) => {
+  if (DRAG.includes(t.target.type) && !DRAG.includes(t.source.type))
+    undo.push({ at: t.source });
+});
 ```
 
 The condition reads the `source` and `target` of a single transition, so a record is pushed only on the step *into* a drag — one per operation, no matter how many `move` events it contains.
@@ -685,7 +682,7 @@ const back = undo.pop()!;
 sel.restore(back.at);
 ```
 
-`restore` is not a transition: nothing is sent, no output event occurs, `TRANSITION` is not published (README, “Limitations”). This is exactly why undo does not go into its own stack — but for the same reason, the code that normally renders the page does not fire either, so undo restores the view manually: the box (or its absence in `empty`), readings, and the journal which rolls back to what was at the start of the drag.
+`restore` is not a transition: nothing is sent, no output event occurs, `TRANSITION` is not published (README, “Limitations”). This is why undo does not go into its own stack — but the subscriptions that render the page do not fire either, so the view after `restore` is updated manually: the box (or its absence in `empty`) and the readouts.
 
 ```
 down 20,20 → drag → up       ready     20,20 100×60 | stack: 1
@@ -693,3 +690,18 @@ grab middle → drag            ready     60,60 100×60 | stack: 2
 undo                          ready     20,20 100×60 | stack: 1
 undo                          empty     —            | stack: 0
 ```
+
+## 10. The machine on the page
+
+At the bottom of the page the automaton is drawn by the widgets of [`@evgkch/fsmjs-inspector`](https://github.com/evgkch/fsmjs-inspector): the legend of states, the transition diagram and the run. `<fsmjs-desk>` binds them — it wires the widgets to one subject and gives each a switch:
+
+```ts
+import { FsmjsDesk, fromMachine } from "@evgkch/fsmjs-inspector/ui";
+
+const desk = new FsmjsDesk();
+desk.wiring = { subject: fromMachine(sel) };
+board.append(desk);
+desk.enroll(diagram); // wiring, drawing and a switch
+```
+
+The widgets subscribe to the machine themselves: every transition is drawn with no code on the page.

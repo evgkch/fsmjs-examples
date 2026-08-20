@@ -8,7 +8,8 @@
  * is held by the schema, not by a chain of `if`s in the view.
  */
 import type { FsmState } from "@evgkch/fsmjs";
-import { history, log, rules } from "@evgkch/fsmjs/debug";
+import { history, log } from "@evgkch/fsmjs/debug";
+import { FsmjsDesk, fromMachine } from "@evgkch/fsmjs-inspector/ui";
 import { handleAt, norm } from "./geometry.js";
 import { inside, sel } from "./machine.js";
 import type { Point, Rect, Sel, Spot } from "./types.js";
@@ -17,7 +18,6 @@ const area = document.getElementById("area")!;
 const box = document.getElementById("box")!;
 const rectOut = document.getElementById("rect")!;
 const undoOut = document.getElementById("undo")!;
-const logOut = document.getElementById("log")!;
 
 /**
  * Pointer position relative to the drawing area, in whole pixels, with the area's own size
@@ -92,19 +92,12 @@ area.addEventListener("pointermove", (e) => {
 // `history` will not do: it records every `move`, so undo would crawl back a
 // drag one pointer sample at a time. A condition inside `log`'s sink looks at
 // the (source, target) pair of one transition and keeps only the step *into* a
-// drag — one entry per operation, holding where the machine stood before it.
+// drag — one entry per operation.
 
 const DRAG = ["drawing", "moving", "resizing"];
 
-/**
- * One undo entry: where the machine stood before the drag, and the log as it read then.
- *
- * The position is `t.source` itself — both halves of S = Q × V, a `State`, taken
- * straight off the transition. A bare rectangle was not enough: the first drag begins in
- * `empty`, and going back to it as `ready` left the page showing a 0×0 selection the
- * machine did not believe in.
- */
-type Undone = { at: number; log: Line[] };
+/** One undo entry: where in the record the machine stood before the drag. */
+type Undone = { at: number };
 const undo: Undone[] = [];
 
 /**
@@ -120,17 +113,13 @@ const undo: Undone[] = [];
  */
 const past = history(sel);
 
-log(
-  sel,
-  rules((line, t) => {
-    // `history` subscribed first, so its index already points at the state this transition
-    // reached; the state the drag began at is the one before it.
-    if (DRAG.includes(t.target.type) && !DRAG.includes(t.source.type))
-      undo.push({ at: past.index - 1, log: entries.map((e) => ({ ...e })) });
-    render(t.target);
-    trace(line);
-  }),
-);
+log(sel, (t) => {
+  // `history` subscribed first, so its index already points at the state this transition
+  // reached; the state the drag began at is the one before it.
+  if (DRAG.includes(t.target.type) && !DRAG.includes(t.source.type))
+    undo.push({ at: past.index - 1 });
+  render(t.target);
+});
 
 /**
  * Wherever the machine is put back, the page draws where it now is.
@@ -149,13 +138,10 @@ past.rx.on("moved", () => {
   render(at);
 });
 
-/** Back one whole drag: the log strip as it read then, and the record put back to where it began. */
+/** Back one whole drag: the record put back to where it began. */
 function undoDrag() {
   const back = undo.pop();
   if (!back) return;
-
-  entries.splice(0, entries.length, ...back.log);
-  paintLog();
   past.jump(back.at);
 }
 
@@ -189,33 +175,13 @@ function render(at: FsmState<Sel>) {
   undoOut.textContent = String(undo.length);
 }
 
-/**
- * The transition log, newest first, with runs folded.
- *
- * A drag is one transition repeated: `move` fires per pointer sample, so
- * `drawing → drawing` would push the interesting lines off the strip within a
- * second. Identical consecutive lines therefore collapse into one and carry a
- * repeat count instead.
- */
-type Line = { line: string; count: number };
-
-const LINES = 12;
-const entries: Line[] = [];
-
-function trace(line: string) {
-  const head = entries[0];
-  if (head?.line === line) head.count++;
-  else entries.unshift({ line, count: 1 });
-
-  entries.length = Math.min(entries.length, LINES);
-  paintLog();
-}
-
-/** Kept apart from `trace` because undo rewrites the whole strip at once. */
-function paintLog() {
-  logOut.textContent = entries
-    .map((e) => (e.count > 1 ? `${e.line} (×${e.count})` : e.line))
-    .join("\n");
-}
-
-render(sel.state);
+// ── the machine, drawn ────────────────────────────────────────────────────────
+// The inspector's widgets on the same `sel`: the desk wires each to one subject and focus and
+// gives it a switch; the widgets hear the machine themselves.
+const desk = new FsmjsDesk();
+desk.wiring = { subject: fromMachine(sel, { history: past }) };
+document.getElementById("board")!.append(desk);
+for (const widget of document.querySelectorAll<HTMLElement>(
+  "fsmjs-legend, fsmjs-diagram, fsmjs-history",
+))
+  desk.enroll(widget as Parameters<typeof desk.enroll>[0]);

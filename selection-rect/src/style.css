@@ -1,4 +1,6 @@
-@import "../../tokens.css";
+@import "../../tokens/tokens.css";
+
+@layer tokens, page;
 
 /* Selection-rectangle example — light and dark, no framework. */
 
@@ -10,253 +12,247 @@
  * What stays here is what that file has no opinion about, because it belongs to this page and to
  * nothing else: the graph paper behind the drawing area, and the lift the panels sit on.
  */
-:root {
-    --grid: color-mix(in oklab, var(--line) 70%, transparent);
-    --accent-in: var(--surface);
-    --shadow:
-        0 1px 2px oklch(22% 0.012 264 / 0.05),
-        0 8px 24px -12px oklch(22% 0.012 264 / 0.18);
-}
-
-@media (prefers-color-scheme: dark) {
+@layer page {
     :root {
+        /* The examples' frames are smaller than the inspector's. */
+        --radius: 18px;
+
+        --grid: color-mix(in oklab, var(--line) 70%, transparent);
+        --accent-in: var(--surface);
         --shadow:
-            0 1px 2px oklch(0% 0 0 / 0.4), 0 12px 32px -14px oklch(0% 0 0 / 0.7);
+            0 1px 2px oklch(22% 0.012 264 / 0.05),
+            0 8px 24px -12px oklch(22% 0.012 264 / 0.18);
     }
-}
 
-body {
-    margin: 0;
-    padding: clamp(1.5rem, 5vw, 3.5rem) 1.25rem 4rem;
-    background: var(--bg);
-    color: var(--ink);
-    font: 400 15px/1.6 var(--main-font);
-}
+    @media (prefers-color-scheme: dark) {
+        :root {
+            --shadow:
+                0 1px 2px oklch(0% 0 0 / 0.4),
+                0 12px 32px -14px oklch(0% 0 0 / 0.7);
+        }
+    }
 
-main {
-    max-width: 44rem;
-    margin: 0 auto;
-    display: grid;
-    gap: 1.5rem;
-}
+    body {
+        margin: 0;
+        padding: clamp(1.5rem, 5vw, 3.5rem) 1.25rem 4rem;
+        background: var(--bg);
+        color: var(--ink);
+        font: 400 15px/1.6 var(--main-font);
+    }
 
-/* ── header ──────────────────────────────────────────────────────────────── */
+    main {
+        max-width: 44rem;
+        margin: 0 auto;
+        display: grid;
+        gap: 1.5rem;
+    }
 
-header {
-    display: grid;
-    gap: 0.4rem;
-}
+    /* ── header ──────────────────────────────────────────────────────────────── */
 
-.eyebrow {
-    margin: 0;
-    font-size: 0.72rem;
-    font-weight: 600;
-    letter-spacing: 0.09em;
-    text-transform: uppercase;
-    color: var(--accent);
-}
+    header {
+        display: grid;
+        gap: 0.4rem;
+    }
 
-h1 {
-    margin: 0;
-    font-size: clamp(1.5rem, 4vw, 1.9rem);
-    font-weight: 620;
-    letter-spacing: -0.021em;
-}
+    .eyebrow {
+        margin: 0;
+        font-size: 0.72rem;
+        font-weight: 600;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+        color: var(--accent);
+    }
 
-.lede {
-    margin: 0;
-    max-width: 38rem;
-    color: var(--muted);
-    text-wrap: pretty;
-}
+    h1 {
+        margin: 0;
+        font-size: clamp(1.5rem, 4vw, 1.9rem);
+        font-weight: 620;
+        letter-spacing: -0.021em;
+    }
 
-/* ── phase chips: the machine's Q, with the current one lit ───────────────── */
+    .lede {
+        margin: 0;
+        max-width: 38rem;
+        color: var(--muted);
+        text-wrap: pretty;
+    }
 
-.phases {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-}
+    /* ── drawing surface ─────────────────────────────────────────────────────── */
 
-.phases li {
-    padding: 0.22rem 0.6rem;
-    border: 1px solid var(--line-firm);
-    border-radius: 999px;
-    font: 500 0.8rem/1.5 var(--mono-font);
-    color: var(--faint);
-    transition:
-        color 0.12s,
-        background-color 0.12s,
-        border-color 0.12s;
-}
+    #area {
+        position: relative;
+        height: clamp(260px, 45vh, 380px);
+        border: 1px solid var(--line-firm);
+        border-radius: var(--radius);
+        background:
+            radial-gradient(circle at 1px 1px, var(--grid) 1px, transparent 0) 0
+                0 / 16px 16px,
+            var(--surface);
+        box-shadow: var(--shadow);
+        cursor: crosshair;
+        touch-action: none;
+        overflow: hidden;
+        user-select: none;
+    }
 
-body[data-phase="empty"] .phases li[data-for="empty"],
-body[data-phase="ready"] .phases li[data-for="ready"],
-body[data-phase="drawing"] .phases li[data-for="drawing"],
-body[data-phase="moving"] .phases li[data-for="moving"],
-body[data-phase="resizing"] .phases li[data-for="resizing"] {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: var(--accent-in);
-}
+    #box {
+        position: absolute;
+        display: none;
+        border: 1.5px solid var(--accent);
+        border-radius: 2px;
+        background: color-mix(in srgb, var(--accent) 12%, transparent);
+        pointer-events: none;
+    }
 
-/* ── drawing surface ─────────────────────────────────────────────────────── */
-
-#area {
-    position: relative;
-    height: clamp(260px, 45vh, 380px);
-    border: 1px solid var(--line-firm);
-    border-radius: var(--radius);
-    background:
-        radial-gradient(circle at 1px 1px, var(--grid) 1px, transparent 0) 0 0 /
-            16px 16px,
-        var(--surface);
-    box-shadow: var(--shadow);
-    cursor: crosshair;
-    touch-action: none;
-    overflow: hidden;
-    user-select: none;
-}
-
-#box {
-    position: absolute;
-    display: none;
-    border: 1.5px solid var(--accent);
-    border-radius: 2px;
-    background: color-mix(in srgb, var(--accent) 12%, transparent);
-    pointer-events: none;
-}
-
-/*
+    /*
  * The eight handles, drawn where `handleAt` actually looks for them — one square
  * background layer per anchor point. Hidden while a fresh rectangle is being
  * dragged out: there is nothing to grab yet.
  */
-#box::after {
-    content: "";
-    position: absolute;
-    inset: -3.5px;
-    background-image:
-        linear-gradient(var(--accent), var(--accent)),
-        linear-gradient(var(--accent), var(--accent)),
-        linear-gradient(var(--accent), var(--accent)),
-        linear-gradient(var(--accent), var(--accent)),
-        linear-gradient(var(--accent), var(--accent)),
-        linear-gradient(var(--accent), var(--accent)),
-        linear-gradient(var(--accent), var(--accent)),
-        linear-gradient(var(--accent), var(--accent));
-    background-size: 7px 7px;
-    background-repeat: no-repeat;
-    background-position:
-        left top,
-        center top,
-        right top,
-        left center,
-        right center,
-        left bottom,
-        center bottom,
-        right bottom;
-    opacity: 0;
-    transition: opacity 0.12s;
-}
+    #box::after {
+        content: "";
+        position: absolute;
+        inset: -3.5px;
+        background-image:
+            linear-gradient(var(--accent), var(--accent)),
+            linear-gradient(var(--accent), var(--accent)),
+            linear-gradient(var(--accent), var(--accent)),
+            linear-gradient(var(--accent), var(--accent)),
+            linear-gradient(var(--accent), var(--accent)),
+            linear-gradient(var(--accent), var(--accent)),
+            linear-gradient(var(--accent), var(--accent)),
+            linear-gradient(var(--accent), var(--accent));
+        background-size: 7px 7px;
+        background-repeat: no-repeat;
+        background-position:
+            left top,
+            center top,
+            right top,
+            left center,
+            right center,
+            left bottom,
+            center bottom,
+            right bottom;
+        opacity: 0;
+        transition: opacity 0.12s;
+    }
 
-body[data-phase="ready"] #box::after,
-body[data-phase="moving"] #box::after,
-body[data-phase="resizing"] #box::after {
-    opacity: 1;
-}
+    body[data-phase="ready"] #box::after,
+    body[data-phase="moving"] #box::after,
+    body[data-phase="resizing"] #box::after {
+        opacity: 1;
+    }
 
-/* ── readout ─────────────────────────────────────────────────────────────── */
+    /* ── readout ─────────────────────────────────────────────────────────────── */
 
-.readout {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
-    gap: 0.75rem;
-}
+    /* The readout stands on the machine's bar: label — value pairs, no card of their own. */
+    .readout {
+        display: inline-flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: 0.4rem 1.25rem;
+    }
 
-.stat {
-    display: grid;
-    gap: 0.15rem;
-    padding: 0.6rem 0.8rem;
-    border: 1px solid var(--line);
-    border-radius: var(--radius-sm);
-    background: var(--surface);
-}
+    .stat {
+        display: inline-flex;
+        align-items: baseline;
+        gap: 0.4rem;
+    }
 
-.stat .label {
-    font-size: 0.72rem;
-    font-weight: 500;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: var(--faint);
-}
+    .stat .label {
+        font-size: 0.72rem;
+        font-weight: 500;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--faint);
+    }
 
-.stat .value {
-    font: 500 0.92rem/1.5 var(--mono-font);
-    font-variant-numeric: tabular-nums;
-}
+    .stat .value {
+        font: 500 0.92rem/1.5 var(--mono-font);
+        font-variant-numeric: tabular-nums;
+    }
 
-.stat.keys {
-    grid-column: span 2;
-}
-.stat.keys .value {
-    color: var(--muted);
-    font-weight: 400;
-}
+    .stat.keys {
+        grid-column: span 2;
+    }
+    .stat.keys .value {
+        color: var(--muted);
+        font-weight: 400;
+    }
 
-kbd {
-    display: inline-block;
-    padding: 0 0.32em;
-    border: 1px solid var(--line-firm);
-    border-bottom-width: 2px;
-    border-radius: var(--step-1);
-    background: var(--bg);
-    color: var(--ink);
-    font: inherit;
-    font-size: 0.85em;
-}
+    kbd {
+        display: inline-block;
+        padding: 0 0.32em;
+        border: 1px solid var(--line-firm);
+        border-bottom-width: 2px;
+        border-radius: var(--step-1);
+        background: var(--bg);
+        color: var(--ink);
+        font: inherit;
+        font-size: 0.85em;
+    }
 
-/* ── transition log ──────────────────────────────────────────────────────── */
+    @media (prefers-reduced-motion: reduce) {
+        * {
+            transition: none !important;
+        }
+    }
 
-.trace {
-    display: grid;
-    gap: 0.5rem;
-}
+    /* The machine block: the widgets bring their own frames; the section spaces them. On a
+   wide screen the diagram stands beside the run, as in the inspector; a widget switched off
+   yields the row to its neighbour. */
+    .machine {
+        display: grid;
+        gap: 0.75rem;
+    }
 
-.trace h2 {
-    margin: 0;
-    font-size: 0.72rem;
-    font-weight: 600;
-    letter-spacing: 0.09em;
-    text-transform: uppercase;
-    color: var(--faint);
-}
+    @media (min-width: 60rem) {
+        .machine {
+            grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+            align-items: stretch;
+        }
 
-#log {
-    margin: 0;
-    padding: 0.8rem 1rem;
-    min-height: 7.5rem;
-    max-height: 14rem;
-    border: 1px solid var(--line);
-    border-radius: var(--radius-sm);
-    background: var(--surface);
-    color: var(--muted);
-    font: 400 12.5px/1.75 var(--mono-font);
-    white-space: pre;
-    overflow: auto;
-    overscroll-behavior: contain;
-}
+        .machine-bar,
+        .machine fsmjs-legend {
+            grid-column: 1 / -1;
+        }
 
-#log:empty::before {
-    content: "waiting for the first transition…";
-    color: var(--faint);
-}
+        .machine fsmjs-diagram[hidden] ~ fsmjs-history {
+            grid-column: 1 / -1;
+        }
 
-@media (prefers-reduced-motion: reduce) {
-    * {
-        transition: none !important;
+        .machine fsmjs-diagram:has(~ fsmjs-history[hidden]) {
+            grid-column: 1 / -1;
+        }
+
+        /* Fixed height on the floor: a growing run scrolls inside its frame instead of pushing
+       the page. */
+        .machine fsmjs-diagram,
+        .machine fsmjs-history {
+            height: 17rem;
+        }
+    }
+
+    /* Stacked on a narrow screen, the frames still keep the page still. */
+    .machine fsmjs-diagram,
+    .machine fsmjs-history {
+        max-height: 17rem;
+    }
+
+    .machine-bar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+    }
+
+    .machine-bar h2 {
+        margin: 0;
+        font-size: 0.72rem;
+        font-weight: 500;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--muted);
     }
 }

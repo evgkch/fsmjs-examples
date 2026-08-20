@@ -1,4 +1,6 @@
-@import "../../tokens.css";
+@import "../../tokens/tokens.css";
+
+@layer tokens, page;
 
 /* Schema-review example — light and dark, no framework. */
 
@@ -6,245 +8,211 @@
  * What the shared vocabulary has no opinion about, because it belongs to this page and to nothing
  * else: the lift the panels sit on, and the ink a phase chip takes when it is the current one.
  */
-:root {
-    --accent-in: var(--surface);
-    --shadow:
-        0 1px 2px oklch(22% 0.012 264 / 0.05),
-        0 8px 24px -12px oklch(22% 0.012 264 / 0.18);
-}
-
-@media (prefers-color-scheme: dark) {
+@layer page {
     :root {
+        /* The examples' frames are smaller than the inspector's. */
+        --radius: 18px;
+
+        --accent-in: var(--surface);
         --shadow:
-            0 1px 2px oklch(0% 0 0 / 0.4), 0 12px 32px -14px oklch(0% 0 0 / 0.7);
+            0 1px 2px oklch(22% 0.012 264 / 0.05),
+            0 8px 24px -12px oklch(22% 0.012 264 / 0.18);
     }
-}
 
-body {
-    margin: 0;
-    padding: clamp(1.5rem, 5vw, 3.5rem) 1.25rem 4rem;
-    background: var(--bg);
-    color: var(--ink);
-    font: 400 15px/1.6 var(--main-font);
-}
+    @media (prefers-color-scheme: dark) {
+        :root {
+            --shadow:
+                0 1px 2px oklch(0% 0 0 / 0.4),
+                0 12px 32px -14px oklch(0% 0 0 / 0.7);
+        }
+    }
 
-main {
-    max-width: 52rem;
-    margin: 0 auto;
-    display: grid;
-    gap: 1.5rem;
-}
+    body {
+        margin: 0;
+        padding: clamp(1.5rem, 5vw, 3.5rem) 1.25rem 4rem;
+        background: var(--bg);
+        color: var(--ink);
+        font: 400 15px/1.6 var(--main-font);
+    }
 
-/* ── header ──────────────────────────────────────────────────────────────── */
+    main {
+        max-width: 52rem;
+        margin: 0 auto;
+        display: grid;
+        gap: 1.5rem;
+    }
 
-header {
-    display: grid;
-    gap: 0.4rem;
-}
+    /* ── header ──────────────────────────────────────────────────────────────── */
 
-.eyebrow {
-    margin: 0;
-    font-size: 0.72rem;
-    font-weight: 600;
-    letter-spacing: 0.09em;
-    text-transform: uppercase;
-    color: var(--accent);
-}
+    header {
+        display: grid;
+        gap: 0.4rem;
+    }
 
-h1 {
-    margin: 0;
-    font-size: clamp(1.5rem, 4vw, 1.9rem);
-    font-weight: 620;
-    letter-spacing: -0.021em;
-}
+    .eyebrow {
+        margin: 0;
+        font-size: 0.72rem;
+        font-weight: 600;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+        color: var(--accent);
+    }
 
-.lede {
-    margin: 0;
-    max-width: 40rem;
-    color: var(--muted);
-    text-wrap: pretty;
-}
+    h1 {
+        margin: 0;
+        font-size: clamp(1.5rem, 4vw, 1.9rem);
+        font-weight: 620;
+        letter-spacing: -0.021em;
+    }
 
-code {
-    font: 500 0.9em/1 var(--mono-font);
-    color: var(--ink);
-}
+    .lede {
+        margin: 0;
+        max-width: 40rem;
+        color: var(--muted);
+        text-wrap: pretty;
+    }
 
-/* ── phase chips: the machine's Q, with the current one lit ───────────────── */
+    code {
+        font: 500 0.9em/1 var(--mono-font);
+        color: var(--ink);
+    }
 
-.phases {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-}
+    /* ── the work: the document, and the pipeline beside it ──────────────────── */
 
-.phases li {
-    padding: 0.22rem 0.6rem;
-    border: 1px solid var(--line-firm);
-    border-radius: 999px;
-    corner-shape: round;
-    font: 500 0.8rem/1.5 var(--mono-font);
-    color: var(--faint);
-    transition:
-        color var(--quick),
-        background-color var(--quick),
-        border-color var(--quick);
-}
-
-body[data-phase="draft"] .phases li[data-for="draft"],
-body[data-phase="checking"] .phases li[data-for="checking"],
-body[data-phase="blocked"] .phases li[data-for="blocked"],
-body[data-phase="review"] .phases li[data-for="review"],
-body[data-phase="changes"] .phases li[data-for="changes"],
-body[data-phase="approved"] .phases li[data-for="approved"],
-body[data-phase="shipped"] .phases li[data-for="shipped"] {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: var(--accent-in);
-}
-
-/* The one phase that is a fault rather than a step, and it says so in the one warm colour. */
-body[data-phase="blocked"] .phases li[data-for="blocked"] {
-    background: var(--warn);
-    border-color: var(--warn);
-    color: var(--surface);
-}
-
-/* ── the work: the document, and the pipeline beside it ──────────────────── */
-
-.work {
-    display: grid;
-    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
-    gap: var(--step-4);
-    align-items: start;
-}
-
-@media (max-width: 46rem) {
     .work {
-        grid-template-columns: minmax(0, 1fr);
+        display: grid;
+        grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+        gap: var(--step-4);
+        align-items: start;
     }
-}
 
-.paper,
-.panel {
-    display: grid;
-    gap: var(--step-3);
-    padding: var(--step-4);
-    border: 1px solid var(--line-firm);
-    border-radius: var(--radius);
-    background: var(--surface);
-    box-shadow: var(--shadow);
-}
+    @media (max-width: 46rem) {
+        .work {
+            grid-template-columns: minmax(0, 1fr);
+        }
+    }
 
-h2.label,
-.stat .label {
-    margin: 0;
-    font-size: 0.72rem;
-    font-weight: 500;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: var(--faint);
-}
+    .paper,
+    .panel {
+        display: grid;
+        gap: var(--step-3);
+        padding: var(--step-4);
+        border: 1px solid var(--line-firm);
+        border-radius: var(--radius);
+        background: var(--surface);
+        box-shadow: var(--shadow);
+    }
 
-textarea {
-    display: block;
-    width: 100%;
-    min-height: 15rem;
-    padding: var(--step-3);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-sm);
-    background: var(--bg);
-    color: var(--ink);
-    font: 400 13px/1.55 var(--mono-font);
-    tab-size: 2;
-    resize: vertical;
-    white-space: pre;
-    overflow-wrap: normal;
-}
+    h2.label,
+    .stat .label {
+        margin: 0;
+        font-size: 0.72rem;
+        font-weight: 500;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--faint);
+    }
 
-textarea:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
-}
+    textarea {
+        display: block;
+        width: 100%;
+        min-height: 15rem;
+        padding: var(--step-3);
+        border: 1px solid var(--line);
+        border-radius: var(--radius-sm);
+        background: var(--bg);
+        color: var(--ink);
+        font: 400 13px/1.55 var(--mono-font);
+        tab-size: 2;
+        resize: vertical;
+        white-space: pre;
+        overflow-wrap: normal;
+    }
 
-/* While the gate has it, the document is not editable — and that is a fact about the schema, not
-   about this rule: there is no `write` in `checking`. This only says so. */
-body[data-phase="checking"] textarea,
-body[data-phase="shipped"] textarea {
-    opacity: 0.62;
-}
+    textarea:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+    }
 
-.hint {
-    margin: 0;
-    color: var(--muted);
-    font-size: 0.85rem;
-    text-wrap: pretty;
-}
+    /* While the gate has it, the document is not editable — and that is a fact about the schema, not
+   about this rule: there is no `write` in `checking`, and the box is read-only by the same
+   question the buttons ask. This only dims it. */
+    body[data-phase="checking"] textarea,
+    body[data-phase="shipped"] textarea {
+        opacity: 0.62;
+    }
 
-/* ── the panel's readout ─────────────────────────────────────────────────── */
+    .hint {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.85rem;
+        text-wrap: pretty;
+    }
 
-.stat {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: var(--step-3);
-}
+    /* ── the panel's readout ─────────────────────────────────────────────────── */
 
-.stat .value {
-    font: 500 0.92rem/1.5 var(--mono-font);
-    font-variant-numeric: tabular-nums;
-    text-align: right;
-}
+    .stat {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: var(--step-3);
+    }
 
-/* ── what the gate found ─────────────────────────────────────────────────── */
+    /* Signature snippets are long; they wrap inside the panel instead of running out of it. */
+    .stat .value {
+        min-width: 0;
+        font: 500 0.92rem/1.5 var(--mono-font);
+        font-variant-numeric: tabular-nums;
+        text-align: right;
+        overflow-wrap: anywhere;
+    }
 
-.faults {
-    display: grid;
-    gap: var(--step-2);
-    margin: 0;
-    padding: 0;
-    list-style: none;
-}
+    /* ── what the gate found ─────────────────────────────────────────────────── */
 
-.faults:empty {
-    display: none;
-}
+    .faults {
+        display: grid;
+        gap: var(--step-2);
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
 
-.faults li {
-    display: grid;
-    gap: 0.1rem;
-    padding: var(--step-2) var(--step-3);
-    border-left: 2px solid var(--line-firm);
-    border-radius: var(--step-1);
-    background: var(--bg);
-}
+    .faults:empty {
+        display: none;
+    }
 
-/* Two ranks, two colours, and the difference between them is whether it stops the pipeline. */
-.faults .blocker {
-    border-left-color: var(--warn);
-}
+    .faults li {
+        display: grid;
+        gap: 0.1rem;
+        padding: var(--step-2) var(--step-3);
+        border-left: 2px solid var(--line-firm);
+        border-radius: var(--step-1);
+        background: var(--bg);
+    }
 
-.faults .caution {
-    border-left-color: var(--emit);
-}
+    /* Two ranks, two colours, and the difference between them is whether it stops the pipeline. */
+    .faults .blocker {
+        border-left-color: var(--warn);
+    }
 
-.faults .where {
-    font: 500 0.75rem/1.4 var(--mono-font);
-    color: var(--faint);
-}
+    .faults .caution {
+        border-left-color: var(--emit);
+    }
 
-.faults .what {
-    font-size: 0.88rem;
-    color: var(--ink);
-    text-wrap: pretty;
-}
+    .faults .where {
+        font: 500 0.75rem/1.4 var(--mono-font);
+        color: var(--faint);
+    }
 
-/* ── what has been settled ───────────────────────────────────────────────── */
+    .faults .what {
+        font-size: 0.88rem;
+        color: var(--ink);
+        text-wrap: pretty;
+    }
 
-/*
+    /* ── what has been settled ───────────────────────────────────────────────── */
+
+    /*
  * Answered, and still on the record.
  *
  * It is drawn as the open items are drawn and quieter — the same two lines, the same rail down the
@@ -252,78 +220,74 @@ body[data-phase="shipped"] textarea {
  * closed item is not a mistake, it is a question that was asked and got an answer, and the reason
  * to keep it is that the answer only makes sense beside it.
  */
-.settled {
-    display: grid;
-    gap: var(--step-2);
-}
+    .settled {
+        display: grid;
+        gap: var(--step-2);
+    }
 
-.settled[hidden] {
-    display: none;
-}
+    .settled[hidden] {
+        display: none;
+    }
 
-.settled ul {
-    display: grid;
-    gap: var(--step-2);
-    margin: 0;
-    padding: 0;
-    list-style: none;
-}
+    .settled ul {
+        display: grid;
+        gap: var(--step-2);
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
 
-.settled li {
-    display: grid;
-    gap: 0.1rem;
-    padding: var(--step-2) var(--step-3);
-    border-left: 2px solid var(--line-firm);
-    border-radius: var(--step-1);
-    background: var(--bg);
-    opacity: 0.618;
-}
+    .settled li {
+        display: grid;
+        gap: 0.1rem;
+        padding: var(--step-2) var(--step-3);
+        border-left: 2px solid var(--line-firm);
+        border-radius: var(--step-1);
+        background: var(--bg);
+        opacity: 0.618;
+    }
 
-.settled .where {
-    font: 500 0.75rem/1.4 var(--mono-font);
-    color: var(--faint);
-}
+    .settled .where {
+        font: 500 0.75rem/1.4 var(--mono-font);
+        color: var(--faint);
+    }
 
-.settled .what {
-    font-size: 0.88rem;
-    color: var(--ink);
-    text-wrap: pretty;
-}
+    .settled .what {
+        font-size: 0.88rem;
+        color: var(--ink);
+        text-wrap: pretty;
+    }
 
-/* ── the controls ────────────────────────────────────────────────────────── */
+    /* ── the controls ────────────────────────────────────────────────────────── */
 
-.acts,
-.ask {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--step-2);
-}
+    .acts,
+    .ask {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--step-2);
+    }
 
-.ask {
-    flex-wrap: nowrap;
-}
+    button {
+        padding: 0 var(--step-3);
+        height: var(--step-5);
+        border: 1px solid var(--line-firm);
+        border-radius: var(--radius-sm);
+        background: var(--surface);
+        color: var(--ink);
+        font: 500 0.82rem/1 var(--main-font);
+        cursor: pointer;
+        transition:
+            border-color var(--quick),
+            background-color var(--quick),
+            color var(--quick);
+    }
 
-button {
-    padding: 0 var(--step-3);
-    height: var(--step-5);
-    border: 1px solid var(--line-firm);
-    border-radius: var(--radius-sm);
-    background: var(--surface);
-    color: var(--ink);
-    font: 500 0.82rem/1 var(--main-font);
-    cursor: pointer;
-    transition:
-        border-color var(--quick),
-        background-color var(--quick),
-        color var(--quick);
-}
+    button:hover:not(:disabled) {
+        border-color: var(--accent);
+        color: var(--accent);
+    }
 
-button:hover:not(:disabled) {
-    border-color: var(--accent);
-    color: var(--accent);
-}
-
-/*
+    /*
  * Off, because the machine says so.
  *
  * Every one of these is disabled by `can()` and nothing else, so what is grey here is exactly what
@@ -331,58 +295,177 @@ button:hover:not(:disabled) {
  * rather than hiding them: the row of controls *is* the alphabet, and watching it light up as the
  * document moves is the shortest description of what a partial transition function means.
  */
-button:disabled {
-    opacity: 0.38;
-    cursor: not-allowed;
-}
+    button:disabled {
+        opacity: 0.38;
+        cursor: not-allowed;
+    }
 
-input[type="text"] {
-    flex: 1 1 auto;
-    min-width: 0;
-    height: var(--step-5);
-    padding: 0 var(--step-3);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-sm);
-    background: var(--bg);
-    color: var(--ink);
-    font: 400 0.85rem/1 var(--main-font);
-}
+    input[type="text"] {
+        flex: 1 1 10rem;
+        min-width: 0;
+        height: var(--step-5);
+        padding: 0 var(--step-3);
+        border: 1px solid var(--line);
+        border-radius: var(--radius-sm);
+        background: var(--bg);
+        color: var(--ink);
+        font: 400 0.85rem/1 var(--main-font);
+    }
 
-input[type="text"]:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
-}
+    input[type="text"]:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+    }
 
-/* ── the activity feed ───────────────────────────────────────────────────── */
+    /* The requester. The platform look is taken off; the corners come from the global superellipse
+   in tokens.css, the caret is drawn below. */
+    .picker {
+        position: relative;
+    }
 
-.trace {
-    display: grid;
-    gap: 0.5rem;
-}
+    select {
+        appearance: none;
+        field-sizing: content;
+        height: var(--step-5);
+        padding: 0 var(--step-5) 0 var(--step-3);
+        border: 1px solid var(--line);
+        border-radius: var(--radius-sm);
+        background: var(--bg);
+        color: var(--ink);
+        font: 400 0.85rem/1 var(--main-font);
+        cursor: pointer;
+        transition: border-color var(--quick);
+    }
 
-.trace h2 {
-    margin: 0;
-    font-size: 0.72rem;
-    font-weight: 500;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: var(--faint);
-}
+    select:hover {
+        border-color: var(--accent);
+    }
 
-/* Newest first, and every line of it came out of the machine as an output event — the page keeps
+    select:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+    }
+
+    .picker::after {
+        content: "";
+        position: absolute;
+        right: var(--step-2);
+        top: 50%;
+        translate: 0 -50%;
+        border: var(--step-1) solid transparent;
+        border-bottom: 0;
+        border-top-color: var(--faint);
+        pointer-events: none;
+    }
+
+    /* ── the activity feed ───────────────────────────────────────────────────── */
+
+    /* The right column: the pipeline's readout, and the activity under it. */
+    .side {
+        display: grid;
+        gap: var(--step-4);
+        min-width: 0;
+        align-content: start;
+    }
+
+    .trace {
+        display: grid;
+        gap: 0.5rem;
+        padding: var(--step-4);
+        border: 1px solid var(--line-firm);
+        border-radius: var(--radius);
+        background: var(--surface);
+        box-shadow: var(--shadow);
+    }
+
+    .trace ol {
+        max-height: 14rem;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+    }
+
+    /* The machine block: the widgets bring their own frames; the section spaces them. On a
+   wide screen the diagram stands beside the run, as in the inspector; a widget switched off
+   yields the row to its neighbour. */
+    .machine {
+        display: grid;
+        gap: 0.75rem;
+    }
+
+    @media (min-width: 60rem) {
+        .machine {
+            grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+            align-items: stretch;
+        }
+
+        .machine-bar,
+        .machine fsmjs-legend {
+            grid-column: 1 / -1;
+        }
+
+        .machine fsmjs-diagram[hidden] ~ fsmjs-history {
+            grid-column: 1 / -1;
+        }
+
+        .machine fsmjs-diagram:has(~ fsmjs-history[hidden]) {
+            grid-column: 1 / -1;
+        }
+
+        /* Fixed height on the floor: a growing run scrolls inside its frame instead of pushing
+       the page. */
+        .machine fsmjs-diagram,
+        .machine fsmjs-history {
+            height: 17rem;
+        }
+    }
+
+    /* Stacked on a narrow screen, the frames still keep the page still. */
+    .machine fsmjs-diagram,
+    .machine fsmjs-history {
+        max-height: 17rem;
+    }
+
+    .machine-bar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+    }
+
+    .machine-bar h2 {
+        margin: 0;
+        font-size: 0.72rem;
+        font-weight: 500;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--muted);
+    }
+
+    .trace h2 {
+        margin: 0;
+        font-size: 0.72rem;
+        font-weight: 500;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--faint);
+    }
+
+    /* Newest first, and every line of it came out of the machine as an output event — the page keeps
    no log of its own, because a second record of what happened is a second thing to be wrong. */
-#feed {
-    display: grid;
-    gap: var(--step-1);
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    max-height: 11rem;
-    overflow-y: auto;
-    font: 400 0.82rem/1.6 var(--mono-font);
-    color: var(--muted);
-}
+    #feed {
+        display: grid;
+        gap: var(--step-1);
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        max-height: 11rem;
+        overflow-y: auto;
+        font: 400 0.82rem/1.6 var(--mono-font);
+        color: var(--muted);
+    }
 
-#feed li:first-child {
-    color: var(--ink);
+    #feed li:first-child {
+        color: var(--ink);
+    }
 }
